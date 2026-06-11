@@ -26,7 +26,7 @@ function UploadCard() {
 
       {/* Button */}
       <button
-        onClick={() => navigate('/upload')}
+        onClick={() => navigate('/upload-pdf')}
         className="ml-auto bg-sage text-white border-none px-4 py-2 rounded-lg text-xs font-medium cursor-pointer whitespace-nowrap hover:bg-sage-dark transition-colors"
       >
         + Upload PDF

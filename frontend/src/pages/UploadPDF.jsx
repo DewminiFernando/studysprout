@@ -47,7 +47,7 @@ function UploadPDF() {
       setUploading(false);
       setSuccess(true);
       setTimeout(() => {
-        navigate('/materials');
+        navigate('/my-materials');
       }, 1500);
     }, 2000);
   };

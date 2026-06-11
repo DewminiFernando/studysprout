@@ -3,9 +3,9 @@
 // Replace with real API calls once the backend is ready.
 
 export const currentUser = {
-  name: 'Devi',
+  name: 'mimii',
   initials: 'D',
-  email: 'devi@example.com',
+  email: 'dewmi@example.com',
   streak: 5,
   plantLevel: 3,
   plantName: 'Sprout',
@@ -170,16 +170,16 @@ export const dashboardTabs = ['Overview', 'Weak topics', 'History'];
 export const sidebarNavItems = {
   main: [
     { label: 'Dashboard', icon: 'LayoutDashboard', path: '/dashboard' },
-    { label: 'Upload PDF', icon: 'Upload', path: '/upload' },
-    { label: 'My Materials', icon: 'BookOpen', path: '/materials' },
+    { label: 'Upload PDF', icon: 'Upload', path: '/upload-pdf' },
+    { label: 'My Materials', icon: 'BookOpen', path: '/my-materials' },
   ],
   study: [
-    { label: 'Question Bank', icon: 'ListChecks', path: '/questions' },
-    { label: 'Quiz Mode', icon: 'Pencil', path: '/quiz' },
-    { label: 'Study Mode', icon: 'Eye', path: '/study' },
+    { label: 'Question Bank', icon: 'ListChecks', path: '/question-bank' },
+    { label: 'Quiz Mode', icon: 'Pencil', path: '/quiz-mode' },
+    { label: 'Study Mode', icon: 'Eye', path: '/study-mode' },
   ],
   progress: [
     { label: 'Analytics', icon: 'BarChart3', path: '/analytics' },
-    { label: 'My Plant', icon: 'Leaf', path: '/plant' },
+    { label: 'My Plant', icon: 'Leaf', path: '/plant-progress' },
   ],
 };

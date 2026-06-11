@@ -96,7 +96,7 @@ function StudyMode() {
                   </Button>
                 ) : (
                   <Button
-                    onClick={() => navigate('/quiz')}
+                    onClick={() => navigate('/quiz-mode')}
                     className="px-3 py-1.5 text-xs"
                   >
                     Try Quiz Mode

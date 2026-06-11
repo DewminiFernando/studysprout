@@ -14,7 +14,7 @@ function StudyGuideline() {
     <div className="max-w-3xl mx-auto">
       {/* Back link */}
       <button
-        onClick={() => navigate('/materials')}
+        onClick={() => navigate('/my-materials')}
         className="flex items-center gap-1.5 text-xs text-text-muted hover:text-sage-dark mb-4 bg-transparent border-none cursor-pointer"
       >
         <ArrowLeft size={14} /> Back to My Materials
@@ -57,7 +57,7 @@ function StudyGuideline() {
           <h4 className="text-xs font-semibold text-text-base">Ready to test your knowledge?</h4>
           <p className="text-[10px] text-text-muted mt-0.5">Start a practice quiz based on this study guide.</p>
         </div>
-        <Button onClick={() => navigate('/quiz')}>
+        <Button onClick={() => navigate('/quiz-mode')}>
           Take Practice Quiz
         </Button>
       </div>

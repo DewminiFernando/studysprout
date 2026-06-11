@@ -73,14 +73,14 @@ function Results() {
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="secondary"
-              onClick={() => navigate('/quiz')}
+              onClick={() => navigate('/quiz-mode')}
               className="text-xs py-2 justify-center"
             >
               <RefreshCw size={13} /> Try Again
             </Button>
             <Button
               variant="ghost"
-              onClick={() => navigate('/materials')}
+              onClick={() => navigate('/my-materials')}
               className="text-xs py-2 justify-center"
             >
               <BookOpen size={13} /> Materials

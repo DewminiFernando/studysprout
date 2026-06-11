@@ -1,6 +1,37 @@
-
-.vscode/
-reference/
+# Backend Python virtual environment
 backend/venv/
-frontend/node_modules/
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment files
 .env
+backend/.env
+frontend/.env
+*.env.local
+
+# Frontend
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db

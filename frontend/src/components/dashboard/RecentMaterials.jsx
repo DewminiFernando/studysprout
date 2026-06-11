@@ -16,7 +16,7 @@ function RecentMaterials() {
           Recent materials
         </div>
         <button
-          onClick={() => navigate('/materials')}
+          onClick={() => navigate('/my-materials')}
           className="text-[11px] text-sage-dark cursor-pointer hover:underline bg-transparent border-none"
         >
           See all →

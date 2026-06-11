@@ -33,15 +33,15 @@ function App() {
           {/* Authenticated routes (wrapped in AppLayout) */}
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/upload" element={<UploadPDF />} />
-            <Route path="/materials" element={<MyMaterials />} />
-            <Route path="/guideline" element={<StudyGuideline />} />
-            <Route path="/questions" element={<QuestionBank />} />
-            <Route path="/study" element={<StudyMode />} />
-            <Route path="/quiz" element={<QuizMode />} />
+            <Route path="/upload-pdf" element={<UploadPDF />} />
+            <Route path="/my-materials" element={<MyMaterials />} />
+            <Route path="/study-guideline" element={<StudyGuideline />} />
+            <Route path="/question-bank" element={<QuestionBank />} />
+            <Route path="/study-mode" element={<StudyMode />} />
+            <Route path="/quiz-mode" element={<QuizMode />} />
             <Route path="/results" element={<Results />} />
             <Route path="/analytics" element={<Analytics />} />
-            <Route path="/plant" element={<PlantProgress />} />
+            <Route path="/plant-progress" element={<PlantProgress />} />
           </Route>
 
           {/* Fallback redirect */}

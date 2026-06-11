@@ -18,7 +18,7 @@ function MyMaterials() {
           description="Access study guidelines and practice question banks generated from your lecture documents."
           icon={BookOpen}
         />
-        <Button onClick={() => navigate('/upload')}>
+        <Button onClick={() => navigate('/upload-pdf')}>
           + Upload PDF
         </Button>
       </div>
@@ -77,13 +77,13 @@ function MyMaterials() {
             <div className="flex items-center gap-2">
               <Button
                 variant="secondary"
-                onClick={() => navigate(`/guideline`)}
+                onClick={() => navigate(`/study-guideline`)}
                 className="px-3 py-1.5 text-xs"
               >
                 Study Guide
               </Button>
               <Button
-                onClick={() => navigate(`/quiz`)}
+                onClick={() => navigate(`/quiz-mode`)}
                 className="px-3 py-1.5 text-xs"
               >
                 Quiz Practice
