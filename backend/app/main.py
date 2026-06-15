@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from app.database import Base, engine, SessionLocal
+from app import models
 
 # Import routers
 from app.routes.auth_routes import router as auth_router
@@ -12,6 +15,9 @@ app = FastAPI(
     description="Backend API for StudySprout AI",
     version="1.0.0"
 )
+
+# Automatically create database tables for MVP
+Base.metadata.create_all(bind=engine)
 
 # Allows frontend to talk to backend
 app.add_middleware(
@@ -42,5 +48,18 @@ def health_check():
         "status": "ok",
         "backend": "FastAPI"
     }
+
+
+@app.get("/db/test", tags=["Database"])
+def test_db():
+    db = SessionLocal()
+    try:
+        db.execute(text("SELECT 1"))
+        return {"message": "Database connection successful"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
+    finally:
+        db.close()
+
 
     
