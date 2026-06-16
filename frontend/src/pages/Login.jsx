@@ -9,14 +9,30 @@ import Button from '../components/ui/Button';
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Connect to backend
-    login(email, password);
-    navigate('/dashboard');
+    if (!email || !password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(
+        err.response?.data?.detail || 
+        'Invalid email or password. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -33,6 +49,11 @@ function Login() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-paper border border-card rounded-xl p-6 space-y-4">
+          {error && (
+            <div className="bg-danger-light text-danger border border-card text-xs rounded-lg p-3 font-medium">
+              {error}
+            </div>
+          )}
           <div>
             <label className="block text-xs text-text-muted mb-1">Email</label>
             <input
@@ -41,6 +62,7 @@ function Login() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
               className="w-full px-3 py-2.5 bg-cream border border-cream-darker rounded-lg text-sm text-text-base placeholder:text-text-light focus:outline-none focus:border-sage transition-colors"
+              disabled={isSubmitting}
             />
           </div>
           <div>
@@ -51,10 +73,11 @@ function Login() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full px-3 py-2.5 bg-cream border border-cream-darker rounded-lg text-sm text-text-base placeholder:text-text-light focus:outline-none focus:border-sage transition-colors"
+              disabled={isSubmitting}
             />
           </div>
-          <Button type="submit" className="w-full justify-center">
-            Log in
+          <Button type="submit" className="w-full justify-center" disabled={isSubmitting}>
+            {isSubmitting ? 'Logging in...' : 'Log in'}
           </Button>
         </form>
 

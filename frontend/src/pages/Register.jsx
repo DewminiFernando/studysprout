@@ -10,14 +10,30 @@ function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { register } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Connect to backend
-    register({ name, email, password });
-    navigate('/dashboard');
+    if (!name || !email || !password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await register(name, email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(
+        err.response?.data?.detail || 
+        'Registration failed. Please check your details and try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -34,6 +50,11 @@ function Register() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-paper border border-card rounded-xl p-6 space-y-4">
+          {error && (
+            <div className="bg-danger-light text-danger border border-card text-xs rounded-lg p-3 font-medium">
+              {error}
+            </div>
+          )}
           <div>
             <label className="block text-xs text-text-muted mb-1">Full name</label>
             <input
@@ -42,6 +63,7 @@ function Register() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Devi Fernando"
               className="w-full px-3 py-2.5 bg-cream border border-cream-darker rounded-lg text-sm text-text-base placeholder:text-text-light focus:outline-none focus:border-sage transition-colors"
+              disabled={isSubmitting}
             />
           </div>
           <div>
@@ -52,6 +74,7 @@ function Register() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
               className="w-full px-3 py-2.5 bg-cream border border-cream-darker rounded-lg text-sm text-text-base placeholder:text-text-light focus:outline-none focus:border-sage transition-colors"
+              disabled={isSubmitting}
             />
           </div>
           <div>
@@ -62,10 +85,11 @@ function Register() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full px-3 py-2.5 bg-cream border border-cream-darker rounded-lg text-sm text-text-base placeholder:text-text-light focus:outline-none focus:border-sage transition-colors"
+              disabled={isSubmitting}
             />
           </div>
-          <Button type="submit" className="w-full justify-center">
-            Create account
+          <Button type="submit" className="w-full justify-center" disabled={isSubmitting}>
+            {isSubmitting ? 'Creating account...' : 'Create account'}
           </Button>
         </form>
 

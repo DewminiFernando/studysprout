@@ -4,6 +4,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import AppLayout from './components/layout/AppLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Importing pages
 import Landing from './pages/Landing';
@@ -31,17 +32,19 @@ function App() {
           <Route path="/register" element={<Register />} />
 
           {/* Authenticated routes (wrapped in AppLayout) */}
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/upload-pdf" element={<UploadPDF />} />
-            <Route path="/my-materials" element={<MyMaterials />} />
-            <Route path="/study-guideline" element={<StudyGuideline />} />
-            <Route path="/question-bank" element={<QuestionBank />} />
-            <Route path="/study-mode" element={<StudyMode />} />
-            <Route path="/quiz-mode" element={<QuizMode />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/plant-progress" element={<PlantProgress />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/upload-pdf" element={<UploadPDF />} />
+              <Route path="/my-materials" element={<MyMaterials />} />
+              <Route path="/study-guideline" element={<StudyGuideline />} />
+              <Route path="/question-bank" element={<QuestionBank />} />
+              <Route path="/study-mode" element={<StudyMode />} />
+              <Route path="/quiz-mode" element={<QuizMode />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/plant-progress" element={<PlantProgress />} />
+            </Route>
           </Route>
 
           {/* Fallback redirect */}

@@ -4,8 +4,8 @@
 
 import axios from 'axios';
 
-// Base URL — update this when backend is ready
-const API_BASE_URL = 'http://localhost:8000/api';
+// Base URL — connected to our FastAPI backend
+const API_BASE_URL = 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -23,14 +23,13 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Placeholder API functions ──
-// These will be implemented when the backend is ready.
-
+// ── Authentication API endpoints ──
 export const authAPI = {
   login: (email, password) => api.post('/auth/login', { email, password }),
-  register: (data) => api.post('/auth/register', data),
-  getProfile: () => api.get('/auth/profile'),
+  register: (name, email, password) => api.post('/auth/register', { name, email, password }),
+  getCurrentUser: () => api.get('/auth/me'),
 };
+
 
 export const materialsAPI = {
   upload: (file) => {

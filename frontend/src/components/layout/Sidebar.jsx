@@ -5,8 +5,10 @@ import { NavLink } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import PlantWidget from '../ui/PlantWidget';
 import { sidebarNavItems } from '../../data/demoData';
+import { useAuth } from '../../context/AuthContext';
 
 function Sidebar() {
+  const { logout } = useAuth();
   // Render a single nav link
   const renderNavItem = (item) => {
     const IconComponent = Icons[item.icon] || Icons.Circle;
@@ -69,6 +71,15 @@ function Sidebar() {
       <div className="mx-[18px] mb-2">
         <PlantWidget />
       </div>
+
+      {/* Logout button */}
+      <button
+        onClick={logout}
+        className="flex items-center gap-2.5 py-2 px-[18px] mx-[18px] mb-4 text-[13px] font-medium text-danger hover:bg-danger-light/30 rounded-lg cursor-pointer transition-all duration-150 border-0 bg-transparent text-left"
+      >
+        <Icons.LogOut size={16} />
+        Log out
+      </button>
     </aside>
   );
 }
