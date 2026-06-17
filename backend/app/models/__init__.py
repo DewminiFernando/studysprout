@@ -1,5 +1,5 @@
 from app.models.user import User
-from app.models.material import StudyMaterial
+from app.models.material_model import Material
 from app.models.study_guideline import StudyGuideline
 from app.models.question import Question
 from app.models.quiz_attempt import QuizAttempt
@@ -8,7 +8,7 @@ from app.models.plant_progress import PlantProgress
 
 __all__ = [
     "User",
-    "StudyMaterial",
+    "Material",
     "StudyGuideline",
     "Question",
     "QuizAttempt",

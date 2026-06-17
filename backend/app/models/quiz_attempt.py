@@ -20,8 +20,8 @@ class QuizAttempt(Base):
     # Many quiz attempts belong to one User
     user = relationship("User", back_populates="quiz_attempts")
     
-    # Many quiz attempts belong to one StudyMaterial
-    material = relationship("StudyMaterial", back_populates="quiz_attempts")
+    # Many quiz attempts belong to one Material
+    material = relationship("Material", back_populates="quiz_attempts")
     
     # One quiz attempt can have many answers (cascade deletes answers if the attempt is deleted)
     answers = relationship("QuizAnswer", back_populates="quiz_attempt", cascade="all, delete-orphan")

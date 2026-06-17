@@ -6,8 +6,8 @@ from app.models.user import User
 from app.utils.token_utils import verify_access_token
 
 # OAuth2PasswordBearer extracts the Bearer token from the Authorization header.
-# We point tokenUrl to our login route '/auth/login'.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+# We point tokenUrl to our swagger login route '/auth/token' which requires form-data.
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),

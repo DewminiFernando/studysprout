@@ -19,7 +19,11 @@ elif database_url.startswith("postgresql://"):
     database_url = database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 # Create the SQLAlchemy engine
-engine = create_engine(database_url)
+engine = create_engine(
+    database_url,
+    pool_pre_ping=True,
+    pool_recycle=300,
+)
 
 # Create SessionLocal class for database sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

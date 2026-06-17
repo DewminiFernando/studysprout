@@ -1,17 +1,16 @@
-// ─── UploadPDF page ───
-// Allows users to drag & drop or select a PDF file.
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
+import { materialAPI } from '../services/api';
 
 function UploadPDF() {
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleDragOver = (e) => {
@@ -27,29 +26,61 @@ function UploadPDF() {
     e.preventDefault();
     setIsDragging(false);
     const files = e.dataTransfer.files;
-    if (files.length > 0 && files[0].type === 'application/pdf') {
-      setFile(files[0]);
+    if (files.length > 0) {
+      const droppedFile = files[0];
+      if (droppedFile.type === 'application/pdf' || droppedFile.name.toLowerCase().endsWith('.pdf')) {
+        setFile(droppedFile);
+        setError('');
+      } else {
+        setError('Only PDF files are allowed.');
+        setFile(null);
+      }
     }
   };
 
   const handleFileChange = (e) => {
     const files = e.target.files;
     if (files.length > 0) {
-      setFile(files[0]);
+      const selectedFile = files[0];
+      if (selectedFile.type === 'application/pdf' || selectedFile.name.toLowerCase().endsWith('.pdf')) {
+        setFile(selectedFile);
+        setError('');
+      } else {
+        setError('Only PDF files are allowed.');
+        setFile(null);
+      }
     }
   };
 
-  const handleUpload = () => {
-    if (!file) return;
+  const handleUpload = async () => {
+    if (!file) {
+      setError('Please select a PDF file first.');
+      return;
+    }
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setError('Only PDF files are allowed.');
+      return;
+    }
+
     setUploading(true);
-    // Simulate API upload & extraction process
-    setTimeout(() => {
-      setUploading(false);
+    setError('');
+    setSuccess(false);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await materialAPI.uploadPDF(formData);
       setSuccess(true);
       setTimeout(() => {
         navigate('/my-materials');
       }, 1500);
-    }, 2000);
+    } catch (err) {
+      console.error(err);
+      const errMsg = err.response?.data?.detail || 'Failed to upload and process PDF. Please try again.';
+      setError(errMsg);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -96,7 +127,10 @@ function UploadPDF() {
               <p className="text-sm font-medium text-text-base truncate max-w-md">{file.name}</p>
               <p className="text-xs text-text-muted mt-1">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
               <button
-                onClick={() => setFile(null)}
+                onClick={() => {
+                  setFile(null);
+                  setError('');
+                }}
                 className="text-xs text-danger hover:underline mt-2 bg-transparent border-none cursor-pointer"
               >
                 Remove file
@@ -125,6 +159,13 @@ function UploadPDF() {
             </div>
           )}
         </div>
+
+        {error && (
+          <div className="bg-danger-light/20 border border-danger/20 text-danger text-xs rounded-lg p-3.5 mt-4 flex items-center gap-2">
+            <AlertCircle size={14} className="flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
         {/* Action buttons */}
         {!uploading && !success && (

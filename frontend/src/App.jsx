@@ -20,6 +20,7 @@ import QuizMode from './pages/QuizMode';
 import Results from './pages/Results';
 import Analytics from './pages/Analytics';
 import PlantProgress from './pages/PlantProgress';
+import MaterialDetail from './pages/MaterialDetail';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/upload-pdf" element={<UploadPDF />} />
               <Route path="/my-materials" element={<MyMaterials />} />
+              <Route path="/materials/:id" element={<MaterialDetail />} />
               <Route path="/study-guideline" element={<StudyGuideline />} />
               <Route path="/question-bank" element={<QuestionBank />} />
               <Route path="/study-mode" element={<StudyMode />} />

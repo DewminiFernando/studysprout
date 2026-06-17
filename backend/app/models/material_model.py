@@ -3,7 +3,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
 
-class StudyMaterial(Base):
+class Material(Base):
     __tablename__ = "study_materials"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -11,7 +11,7 @@ class StudyMaterial(Base):
     original_filename = Column(String(255), nullable=False)
     file_path = Column(String(500), nullable=True)
     extracted_text = Column(Text, nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     # Relationships

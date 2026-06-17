@@ -18,4 +18,4 @@ class StudyGuideline(Base):
 
     # Relationships
     # One study guideline links to exactly one study material
-    material = relationship("StudyMaterial", back_populates="study_guideline")
+    material = relationship("Material", back_populates="study_guideline")

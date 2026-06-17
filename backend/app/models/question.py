@@ -18,7 +18,7 @@ class Question(Base):
 
     # Relationships
     # Many questions belong to one study material
-    material = relationship("StudyMaterial", back_populates="questions")
+    material = relationship("Material", back_populates="questions")
     
     # One question can appear in many quiz answers
     quiz_answers = relationship("QuizAnswer", back_populates="question")

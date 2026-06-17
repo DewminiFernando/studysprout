@@ -14,7 +14,7 @@ class User(Base):
 
     # Relationships
     # One user can have many study materials (cascade deletes materials if user is deleted)
-    materials = relationship("StudyMaterial", back_populates="owner", cascade="all, delete-orphan")
+    materials = relationship("Material", back_populates="owner", cascade="all, delete")
     
     # One user can have many quiz attempts (cascade deletes attempts if user is deleted)
     quiz_attempts = relationship("QuizAttempt", back_populates="user", cascade="all, delete-orphan")

@@ -31,16 +31,24 @@ export const authAPI = {
 };
 
 
+export const materialAPI = {
+  uploadPDF: (formData) => api.post('/materials/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  getMaterials: () => api.get('/materials'),
+  getMaterialById: (id) => api.get(`/materials/${id}`),
+  deleteMaterial: (id) => api.delete(`/materials/${id}`),
+};
+
 export const materialsAPI = {
   upload: (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post('/materials/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    return materialAPI.uploadPDF(formData);
   },
-  getAll: () => api.get('/materials'),
-  getById: (id) => api.get(`/materials/${id}`),
+  getAll: () => materialAPI.getMaterials(),
+  getById: (id) => materialAPI.getMaterialById(id),
+  delete: (id) => materialAPI.deleteMaterial(id),
 };
 
 export const quizAPI = {
