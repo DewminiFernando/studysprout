@@ -1,112 +1,220 @@
 // ─── StudyMode page ───
-// Allows interactive study of guides, highlights, and flashcard practice.
+// Flashcard-style revision: shows one question at a time with show/hide answer toggle.
+// Fetches real data from the backend API.
 
-import { useState } from 'react';
-import { Eye, BookOpen, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, ChevronLeft, ChevronRight, ArrowLeft, AlertCircle, Loader2, BookOpen } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
+import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
-import { sampleStudyGuide } from '../data/demoData';
+import { materialAPI } from '../services/api';
 
 function StudyMode() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState(0);
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
+
+  // Fetch generated questions on load
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const response = await materialAPI.getQuestions(id);
+        setQuestions(response.data);
+      } catch (err) {
+        if (err.response?.status === 404) {
+          setQuestions([]);
+        } else {
+          setError(err.response?.data?.detail || 'Failed to load questions.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, [id]);
+
+  const currentQuestion = questions[currentIndex];
+  const totalQuestions = questions.length;
+
+  const goToPrevious = () => {
+    setShowAnswer(false);
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const goToNext = () => {
+    setShowAnswer(false);
+    setCurrentIndex((prev) => Math.min(totalQuestions - 1, prev + 1));
+  };
+
+  const toggleAnswer = () => {
+    setShowAnswer((prev) => !prev);
+  };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-3xl mx-auto">
+      {/* Back link */}
+      <button
+        onClick={() => navigate(`/question-bank/${id}`)}
+        className="flex items-center gap-1.5 text-xs text-text-muted hover:text-sage-dark mb-4 bg-transparent border-none cursor-pointer"
+      >
+        <ArrowLeft size={14} /> Back to Question Bank
+      </button>
+
       <PageHeader
         title="Study Mode"
-        description="Review study content interactively and practice core concepts step-by-step."
+        description="Review questions one at a time like flashcards. Show answers when you're ready."
         icon={Eye}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        {/* Left Side: Topic Navigation */}
-        <div className="md:col-span-1 bg-paper border border-card rounded-xl p-4 space-y-2 h-fit">
-          <div className="text-[11px] font-semibold text-text-light uppercase tracking-wider mb-2">
-            Lecture Sections
-          </div>
-          {sampleStudyGuide.sections.map((section, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveSection(index)}
-              className={`w-full text-left p-3 rounded-lg text-xs transition-colors flex items-center justify-between border cursor-pointer ${
-                activeSection === index
-                  ? 'bg-sage-pale border-sage-light text-sage-dark font-medium'
-                  : 'bg-transparent border-transparent text-text-muted hover:bg-cream/50'
-              }`}
-            >
-              <span>{section.heading}</span>
-              <ChevronRight size={14} className={activeSection === index ? 'text-sage-dark' : 'text-text-light'} />
-            </button>
-          ))}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-paper border border-card rounded-xl mt-6">
+          <div className="w-10 h-10 border-4 border-sage border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p className="text-sm text-text-muted">Loading questions...</p>
         </div>
-
-        {/* Right Side: Detailed Section view */}
-        <div className="md:col-span-2 space-y-4">
-          <div className="bg-paper border border-card rounded-xl p-5 min-h-[300px] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center gap-2 pb-3 border-b border-cream-dark mb-4">
-              <Sparkles size={18} className="text-sage" />
-              <h2 className="text-sm font-semibold text-text-base">
-                {sampleStudyGuide.sections[activeSection].heading}
-              </h2>
+      ) : error ? (
+        <div className="bg-paper border border-card rounded-xl p-8 text-center flex flex-col items-center justify-center mt-6">
+          <div className="w-12 h-12 bg-danger-light/30 text-danger rounded-full flex items-center justify-center mb-3">
+            <AlertCircle size={24} />
+          </div>
+          <h3 className="text-sm font-semibold text-text-base">Error</h3>
+          <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto">{error}</p>
+        </div>
+      ) : questions.length === 0 ? (
+        <div className="bg-paper border border-card rounded-xl p-10 text-center flex flex-col items-center justify-center mt-6">
+          <div className="w-12 h-12 bg-sage-pale text-sage rounded-full flex items-center justify-center mb-3">
+            <BookOpen size={24} />
+          </div>
+          <h3 className="text-sm font-medium text-text-base">No Questions Available</h3>
+          <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto">
+            Please generate questions first from the Question Bank page.
+          </p>
+          <Button onClick={() => navigate(`/question-bank/${id}`)} className="mt-4 text-xs py-2">
+            Go to Question Bank
+          </Button>
+        </div>
+      ) : (
+        <div className="mt-6">
+          {/* Progress indicator */}
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[11px] text-text-light font-medium">
+              Question {currentIndex + 1} of {totalQuestions}
+            </span>
+            <div className="flex items-center gap-2">
+              {currentQuestion.topic && (
+                <Badge variant="default">{currentQuestion.topic}</Badge>
+              )}
+              <Badge variant={currentQuestion.difficulty || 'default'}>
+                {currentQuestion.difficulty || 'N/A'}
+              </Badge>
+              <Badge variant="info">{currentQuestion.question_type}</Badge>
             </div>
+          </div>
 
-            {/* Bullet points */}
+          {/* Progress bar */}
+          <div className="w-full h-1.5 bg-cream-dark rounded-full mb-6">
+            <div
+              className="h-full bg-sage rounded-full transition-all duration-300"
+              style={{ width: `${((currentIndex + 1) / totalQuestions) * 100}%` }}
+            ></div>
+          </div>
+
+          {/* Flashcard */}
+          <div className="bg-paper border border-card rounded-xl p-6 md:p-8 min-h-[280px] flex flex-col">
+            {/* Question */}
             <div className="flex-1">
-              <ul className="space-y-4">
-                {sampleStudyGuide.sections[activeSection].points.map((point, index) => (
-                  <li key={index} className="flex items-start gap-3 text-xs text-text-muted leading-relaxed">
-                    <span className="w-5 h-5 rounded-full bg-sage-pale text-sage-dark flex items-center justify-center text-[10px] font-semibold flex-shrink-0 mt-0.5">
-                      {index + 1}
-                    </span>
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="text-[11px] font-semibold text-sage-dark uppercase tracking-wider mb-3">
+                Question
+              </div>
+              <p className="text-sm text-text-base leading-relaxed font-medium">
+                {currentQuestion.question_text}
+              </p>
             </div>
 
-            {/* Footer buttons */}
-            <div className="flex justify-between items-center mt-6 pt-4 border-t border-cream-dark">
-              <span className="text-[10px] text-text-light">
-                Section {activeSection + 1} of {sampleStudyGuide.sections.length}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    setActiveSection((prev) => Math.max(0, prev - 1))
-                  }
-                  disabled={activeSection === 0}
-                  className="px-3 py-1.5 text-xs"
-                >
-                  Previous
-                </Button>
-                {activeSection < sampleStudyGuide.sections.length - 1 ? (
-                  <Button
-                    onClick={() =>
-                      setActiveSection((prev) =>
-                        Math.min(sampleStudyGuide.sections.length - 1, prev + 1)
-                      )
-                    }
-                    className="px-3 py-1.5 text-xs"
-                  >
-                    Next Section
-                  </Button>
+            {/* Show/Hide Answer Button */}
+            <div className="mt-6 pt-4 border-t border-cream-dark">
+              <Button
+                variant="secondary"
+                onClick={toggleAnswer}
+                className="w-full text-xs py-2.5 flex items-center justify-center gap-2"
+              >
+                {showAnswer ? (
+                  <>
+                    <EyeOff size={14} /> Hide Answer
+                  </>
                 ) : (
-                  <Button
-                    onClick={() => navigate('/quiz-mode')}
-                    className="px-3 py-1.5 text-xs"
-                  >
-                    Try Quiz Mode
-                  </Button>
+                  <>
+                    <Eye size={14} /> Show Answer
+                  </>
                 )}
-              </div>
+              </Button>
+
+              {/* Answer + Explanation */}
+              {showAnswer && (
+                <div className="mt-4 bg-cream/40 border border-cream-darker/60 rounded-xl p-4 space-y-3">
+                  <div>
+                    <div className="text-[11px] font-semibold text-sage-dark mb-1">
+                      Correct Answer
+                    </div>
+                    <p className="text-xs text-text-base leading-relaxed font-medium">
+                      {currentQuestion.correct_answer}
+                    </p>
+                  </div>
+                  {currentQuestion.explanation && (
+                    <div>
+                      <div className="text-[11px] font-semibold text-sage-dark mb-1">
+                        Explanation
+                      </div>
+                      <p className="text-xs text-text-muted leading-relaxed">
+                        {currentQuestion.explanation}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Navigation buttons */}
+          <div className="flex justify-between items-center mt-4">
+            <Button
+              variant="secondary"
+              onClick={goToPrevious}
+              disabled={currentIndex === 0}
+              className="px-4 py-2 text-xs flex items-center gap-1.5"
+            >
+              <ChevronLeft size={14} /> Previous
+            </Button>
+
+            <span className="text-[10px] text-text-light">
+              {currentIndex + 1} / {totalQuestions}
+            </span>
+
+            {currentIndex < totalQuestions - 1 ? (
+              <Button
+                onClick={goToNext}
+                className="px-4 py-2 text-xs flex items-center gap-1.5"
+              >
+                Next <ChevronRight size={14} />
+              </Button>
+            ) : (
+              <Button
+                onClick={() => navigate(`/question-bank/${id}`)}
+                className="px-4 py-2 text-xs"
+              >
+                Finish Review
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

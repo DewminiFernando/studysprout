@@ -38,6 +38,16 @@ export const materialAPI = {
   getMaterials: () => api.get('/materials'),
   getMaterialById: (id) => api.get(`/materials/${id}`),
   deleteMaterial: (id) => api.delete(`/materials/${id}`),
+
+  // AI Study Guideline
+  generateGuideline: (materialId) => api.post(`/materials/${materialId}/generate-guideline`),
+  getGuideline: (materialId) => api.get(`/materials/${materialId}/guideline`),
+
+  // AI Question Bank
+  generateQuestions: (materialId) => api.post(`/materials/${materialId}/generate-questions`),
+  getQuestions: (materialId, filters = {}) => api.get(`/materials/${materialId}/questions`, {
+    params: filters,
+  }),
 };
 
 export const materialsAPI = {

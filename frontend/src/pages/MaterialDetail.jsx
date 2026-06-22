@@ -72,8 +72,17 @@ function MaterialDetail() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 self-start sm:self-center">
-                <Button variant="secondary" onClick={() => navigate('/my-materials')} className="px-3 py-1.5 text-xs">
+              <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+                <Button variant="secondary" onClick={() => navigate(`/study-guideline/${id}`)} className="px-3 py-1.5 text-xs">
+                  Study Guideline
+                </Button>
+                <Button variant="secondary" onClick={() => navigate(`/question-bank/${id}`)} className="px-3 py-1.5 text-xs">
+                  Question Bank
+                </Button>
+                <Button variant="secondary" onClick={() => navigate(`/study-mode/${id}`)} className="px-3 py-1.5 text-xs">
+                  Study Mode
+                </Button>
+                <Button variant="ghost" onClick={() => navigate('/my-materials')} className="px-3 py-1.5 text-xs">
                   Close View
                 </Button>
               </div>

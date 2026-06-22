@@ -39,9 +39,9 @@ function App() {
               <Route path="/upload-pdf" element={<UploadPDF />} />
               <Route path="/my-materials" element={<MyMaterials />} />
               <Route path="/materials/:id" element={<MaterialDetail />} />
-              <Route path="/study-guideline" element={<StudyGuideline />} />
-              <Route path="/question-bank" element={<QuestionBank />} />
-              <Route path="/study-mode" element={<StudyMode />} />
+              <Route path="/study-guideline/:id" element={<StudyGuideline />} />
+              <Route path="/question-bank/:id" element={<QuestionBank />} />
+              <Route path="/study-mode/:id" element={<StudyMode />} />
               <Route path="/quiz-mode" element={<QuizMode />} />
               <Route path="/results" element={<Results />} />
               <Route path="/analytics" element={<Analytics />} />
