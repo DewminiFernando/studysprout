@@ -1,6 +1,7 @@
 // ─── Analytics page ───
-// Renders learning analytics: study score trends and topic masteries.
+// Renders learning analytics: study score trends, topic masteries, and weak topic analysis.
 
+import { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Award, Clock } from 'lucide-react';
 import {
   BarChart,
@@ -16,9 +17,32 @@ import {
 } from 'recharts';
 import PageHeader from '../components/ui/PageHeader';
 import { analyticsData } from '../data/demoData';
+import { quizAPI } from '../services/api';
 
 function Analytics() {
   const COLORS = ['#7A9E87', '#B8D4C0', '#4A7558', '#C8934A'];
+
+  const [weakTopics, setWeakTopics] = useState([]);
+  const [loadingWeak, setLoadingWeak] = useState(true);
+  const [errorWeak, setErrorWeak] = useState('');
+
+  useEffect(() => {
+    const fetchWeakTopics = async () => {
+      try {
+        setLoadingWeak(true);
+        setErrorWeak('');
+        const response = await quizAPI.getWeakTopics();
+        setWeakTopics(response.data || []);
+      } catch (err) {
+        console.error('Failed to load weak topics:', err);
+        setErrorWeak('Failed to load weak topics analysis.');
+      } finally {
+        setLoadingWeak(false);
+      }
+    };
+
+    fetchWeakTopics();
+  }, []);
 
   // Calculate some simple aggregates
   const totalQuestions = analyticsData.topicBreakdown.reduce((acc, curr) => acc + curr.total, 0);
@@ -31,7 +55,7 @@ function Analytics() {
   }));
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto space-y-4">
       <PageHeader
         title="Learning Analytics"
         description="Monitor study completion, diagnostic quiz performance, and topic weaknesses over time."
@@ -39,7 +63,7 @@ function Analytics() {
       />
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-paper border border-card rounded-xl p-4 flex items-center gap-3">
           <div className="w-9 h-9 bg-sage-pale text-sage-dark rounded-lg flex items-center justify-center">
             <TrendingUp size={18} />
@@ -71,7 +95,7 @@ function Analytics() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Performance Over Time Chart */}
         <div className="bg-paper border border-card rounded-xl p-4 md:p-5">
           <h3 className="text-xs font-semibold text-text-base mb-4">Quiz Score Trend</h3>
@@ -146,6 +170,68 @@ function Analytics() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Weak Topics Analysis Section */}
+      <div className="bg-paper border border-card rounded-xl p-5 shadow-sm">
+        <h3 className="text-xs font-semibold text-text-base mb-3 uppercase tracking-wider">
+          Weak Topics Analysis
+        </h3>
+
+        {loadingWeak ? (
+          <div className="flex flex-col items-center justify-center py-10">
+            <div className="w-7 h-7 border-3 border-sage border-t-transparent rounded-full animate-spin mb-3"></div>
+            <p className="text-xs text-text-muted">Loading weakness analytics...</p>
+          </div>
+        ) : errorWeak ? (
+          <div className="text-xs text-danger text-center py-6">{errorWeak}</div>
+        ) : weakTopics.length === 0 ? (
+          <div className="text-center py-8 bg-cream/20 rounded-xl border border-dashed border-cream-darker/60">
+            <p className="text-xs text-text-muted font-medium">No weak topics detected yet! 🌱</p>
+            <p className="text-[10px] text-text-light mt-1">Take practice quizzes to identify subjects needing revision.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+            {weakTopics.map((wt, idx) => (
+              <div
+                key={idx}
+                className="bg-cream/30 border border-cream-darker/60 rounded-xl p-4 flex flex-col justify-between hover:border-sage/30 transition-colors"
+              >
+                <div>
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="text-xs font-bold text-text-base truncate pr-2 max-w-[70%]">
+                      {wt.topic}
+                    </h4>
+                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-danger-light text-danger font-bold border border-danger/10">
+                      Weakness: {(wt.weakness_rate * 100).toFixed(0)}%
+                    </span>
+                  </div>
+
+                  <div className="text-[10px] text-text-muted space-y-1.5 mt-2.5">
+                    <div className="flex justify-between">
+                      <span>Incorrect Answers:</span>
+                      <span className="font-semibold text-text-base">{wt.weak_answers} / {wt.total_questions}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Avg Semantic Match:</span>
+                      <span className="font-semibold text-text-base">{wt.average_similarity.toFixed(4)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Bar representation */}
+                <div className="mt-4 pt-1 border-t border-cream-dark">
+                  <div className="h-1 bg-cream-dark rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-amber rounded-full"
+                      style={{ width: `${wt.weakness_rate * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

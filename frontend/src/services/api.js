@@ -62,10 +62,10 @@ export const materialsAPI = {
 };
 
 export const quizAPI = {
-  getQuestions: (materialId) => api.get(`/quiz/${materialId}/questions`),
-  submitAnswer: (questionId, answer) =>
-    api.post(`/quiz/${questionId}/answer`, { answer }),
-  getResults: (quizId) => api.get(`/quiz/${quizId}/results`),
+  startQuiz: (data) => api.post('/quiz/start', data),
+  submitQuiz: (data) => api.post('/quiz/submit', data),
+  getQuizHistory: () => api.get('/quiz/history'),
+  getWeakTopics: () => api.get('/quiz/weak-topics'),
 };
 
 export const analyticsAPI = {

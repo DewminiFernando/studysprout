@@ -1,78 +1,169 @@
 // ─── QuizMode page ───
-// Interactive practice quizzes with semantic evaluation simulation.
+// Dynamic practice quizzes with semantic evaluation on submission.
 
-import { useState } from 'react';
-import { Pencil, Check, AlertTriangle, ArrowRight, HelpCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Pencil, ArrowRight, HelpCircle, AlertCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { sampleQuiz } from '../data/demoData';
+import { quizAPI } from '../services/api';
 
 function QuizMode() {
   const navigate = useNavigate();
-  const [userAnswer, setUserAnswer] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [similarityScore, setSimilarityScore] = useState(null);
-  const [feedbackMsg, setFeedbackMsg] = useState('');
+  const location = useLocation();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!userAnswer.trim()) return;
+  // Retrieve materialId from navigation state (or fallback to id if provided)
+  const materialId = location.state?.materialId || location.state?.id;
 
-    // Simulate calling sentence-transformers / similarity check API
-    // Calculate a score based on word length or predefined match rules
-    const hasReduction = userAnswer.toLowerCase().includes('redu') || userAnswer.toLowerCase().includes('duplicat');
-    const hasConsistency = userAnswer.toLowerCase().includes('consist') || userAnswer.toLowerCase().includes('integr');
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState({}); // { [questionId]: 'answer text' }
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-    let score = 0.35;
-    if (hasReduction && hasConsistency) {
-      score = 0.86;
-    } else if (hasReduction || hasConsistency) {
-      score = 0.58;
+  useEffect(() => {
+    if (!materialId) {
+      setLoading(false);
+      setError('No study material selected. Please select a material to start a quiz.');
+      return;
     }
 
-    setSimilarityScore(score);
-    setSubmitted(true);
+    const fetchQuizQuestions = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        // Start quiz for selected material with default limit of 10
+        const response = await quizAPI.startQuiz({
+          material_id: parseInt(materialId),
+          limit: 10,
+        });
+        setQuestions(response.data.questions || []);
+      } catch (err) {
+        console.error(err);
+        setError(
+          err.response?.data?.detail ||
+            'Failed to start quiz. Please ensure questions are generated for this material first.'
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (score >= 0.75) {
-      setFeedbackMsg('Normalization organizes data to reduce redundancy and improve integrity. Your answer captures the core meaning well.');
-    } else if (score >= 0.50) {
-      setFeedbackMsg('Partial match. You mentioned some correct aspects, but make sure to emphasize reducing redundancy and maintaining consistency.');
-    } else {
-      setFeedbackMsg('Needs revision. Try to focus on table restructuring, eliminating duplication, and database integrity.');
-    }
+    fetchQuizQuestions();
+  }, [materialId]);
+
+  const handleAnswerChange = (questionId, value) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: value,
+    }));
   };
 
   const handleNext = () => {
-    // Navigate to results page
-    navigate('/results', {
-      state: {
-        score: Math.round(similarityScore * 100),
-        answer: userAnswer,
-        feedback: feedbackMsg,
-      },
-    });
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+    }
   };
+
+  const handlePrev = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((prev) => prev - 1);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (questions.length === 0) return;
+
+    try {
+      setSubmitting(true);
+      setError('');
+
+      // Format answers as list of { question_id, student_answer }
+      const formattedAnswers = questions.map((q) => ({
+        question_id: q.id,
+        student_answer: answers[q.id] || '',
+      }));
+
+      // Call API submit quiz
+      const response = await quizAPI.submitQuiz({
+        material_id: parseInt(materialId),
+        answers: formattedAnswers,
+      });
+
+      // Navigate to Results page, passing the backend response
+      navigate('/results', {
+        state: { quizResult: response.data },
+      });
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.detail || 'An error occurred during submission. Please try again.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto py-12">
+        <div className="flex flex-col items-center justify-center py-20 bg-paper border border-card rounded-xl">
+          <div className="w-10 h-10 border-4 border-sage border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p className="text-sm text-text-muted">Loading quiz questions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && questions.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto py-12">
+        <div className="bg-paper border border-card rounded-xl p-8 text-center flex flex-col items-center justify-center">
+          <div className="w-12 h-12 bg-danger-light/30 text-danger rounded-full flex items-center justify-center mb-3">
+            <AlertCircle size={24} />
+          </div>
+          <h3 className="text-sm font-semibold text-text-base">Error Loading Quiz</h3>
+          <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto">{error}</p>
+          <Button onClick={() => navigate('/my-materials')} className="mt-4 text-xs py-2">
+            Go to My Materials
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const progressPercent = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+  const currentAnswer = answers[currentQuestion?.id] || '';
 
   return (
     <div className="max-w-2xl mx-auto">
       <PageHeader
         title="Practice Quiz"
-        description="Write answers to practice questions. Our AI evaluates semantic similarity to provide immediate feedback."
+        description="Write answers to practice questions. Our AI evaluates semantic similarity to provide immediate feedback on submission."
         icon={Pencil}
       />
 
-      <div className="bg-paper border border-card rounded-xl overflow-hidden mt-6">
+      {error && (
+        <div className="bg-danger-light/20 border border-danger/20 text-danger text-xs rounded-xl p-3.5 flex items-center gap-3 mt-4 mb-2">
+          <AlertCircle size={15} className="flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <div className="bg-paper border border-card rounded-xl overflow-hidden mt-6 shadow-sm">
         {/* Quiz Panel Header */}
         <div className="bg-sage-pale px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-xs font-semibold text-text-base">{sampleQuiz.title}</div>
+            <div className="text-xs font-semibold text-text-base">StudySprout Quiz Mode</div>
             <div className="text-[10px] text-text-muted mt-0.5">
-              Question {sampleQuiz.currentQuestion} of {sampleQuiz.totalQuestions}
+              Question {currentQuestionIndex + 1} of {questions.length}
             </div>
           </div>
-          <Badge variant="mcq">{sampleQuiz.type}</Badge>
+          <Badge variant="mcq">{currentQuestion?.question_type || 'Short Answer'}</Badge>
         </div>
 
         {/* Quiz Panel Body */}
@@ -81,7 +172,7 @@ function QuizMode() {
           <div className="h-1 bg-cream-dark rounded-full mb-4 overflow-hidden">
             <div
               className="h-full bg-sage rounded-full transition-all duration-300"
-              style={{ width: `${(sampleQuiz.currentQuestion / sampleQuiz.totalQuestions) * 100}%` }}
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
 
@@ -89,114 +180,90 @@ function QuizMode() {
           <div className="flex items-start gap-2.5 mb-4">
             <HelpCircle size={16} className="text-sage mt-0.5 flex-shrink-0" />
             <h2 className="text-xs md:text-sm font-medium text-text-base leading-relaxed">
-              {sampleQuiz.question}
+              {currentQuestion?.question_text}
             </h2>
           </div>
 
-          {/* Input form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Topic and Difficulty badges */}
+          <div className="flex gap-2 mb-4">
+            {currentQuestion?.topic && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cream-dark text-text-muted">
+                Topic: {currentQuestion.topic}
+              </span>
+            )}
+            {currentQuestion?.difficulty && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cream-dark text-text-muted">
+                Difficulty: {currentQuestion.difficulty}
+              </span>
+            )}
+          </div>
+
+          {/* Input Form */}
+          <div className="space-y-4">
             <textarea
-              rows={3}
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              disabled={submitted}
+              rows={4}
+              value={currentAnswer}
+              onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
               placeholder="Type your explanation here..."
-              className="w-full p-3 bg-cream border border-cream-darker rounded-lg text-xs text-text-base placeholder:text-text-light focus:outline-none focus:border-sage disabled:bg-cream/40 disabled:text-text-muted transition-colors resize-none"
+              disabled={submitting}
+              className="w-full p-3 bg-cream border border-cream-darker rounded-lg text-xs text-text-base placeholder:text-text-light focus:outline-none focus:border-sage disabled:bg-cream/40 disabled:text-text-muted transition-colors resize-none font-sans"
             />
 
             {/* Actions */}
-            {!submitted ? (
-              <div className="flex justify-end gap-2">
+            <div className="flex justify-between items-center pt-2">
+              <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setUserAnswer(sampleQuiz.sampleAnswer)}
+                  onClick={() =>
+                    handleAnswerChange(
+                      currentQuestion.id,
+                      `This is a sample student answer explanation about ${currentQuestion.topic || 'the topic'} to verify semantic similarity checkers.`
+                    )
+                  }
                   className="bg-transparent border border-cream-darker text-text-muted text-[11px] px-3.5 py-1.5 rounded-lg cursor-pointer hover:bg-cream/50 transition-colors"
                 >
-                  Fill Auto-Demo Answer
+                  Fill Demo Answer
                 </button>
-                <Button
-                  type="submit"
-                  disabled={!userAnswer.trim()}
-                  className="px-4 py-1.5 text-xs font-medium"
-                >
-                  Submit Answer →
-                </Button>
               </div>
-            ) : null}
-          </form>
-        </div>
 
-        {/* Answer results panel */}
-        {submitted && (
-          <div
-            className={`border-t border-card p-4 transition-all duration-300 ${
-              similarityScore >= 0.75
-                ? 'bg-[#EAF3DE]'
-                : similarityScore >= 0.50
-                ? 'bg-amber-light/30'
-                : 'bg-danger-light/30'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <div
-                  className={`w-[18px] h-[18px] rounded-full flex items-center justify-center text-white ${
-                    similarityScore >= 0.75
-                      ? 'bg-moss'
-                      : similarityScore >= 0.50
-                      ? 'bg-amber'
-                      : 'bg-danger'
-                  }`}
+                <Button
+                  variant="secondary"
+                  disabled={currentQuestionIndex === 0 || submitting}
+                  onClick={handlePrev}
+                  className="px-3 py-1.5 text-xs flex items-center gap-1"
                 >
-                  {similarityScore >= 0.75 ? (
-                    <Check size={11} />
-                  ) : (
-                    <AlertTriangle size={11} />
-                  )}
-                </div>
-                <div
-                  className={`text-xs font-semibold ${
-                    similarityScore >= 0.75
-                      ? 'text-moss'
-                      : similarityScore >= 0.50
-                      ? 'text-amber'
-                      : 'text-danger'
-                  }`}
-                >
-                  {similarityScore >= 0.75
-                    ? 'Correct'
-                    : similarityScore >= 0.50
-                    ? 'Partial Correct'
-                    : 'Needs Revision'}{' '}
-                  — semantic match {similarityScore.toFixed(2)}
-                </div>
+                  <ChevronLeft size={14} /> Back
+                </Button>
+
+                {currentQuestionIndex < questions.length - 1 ? (
+                  <Button
+                    onClick={handleNext}
+                    className="px-3 py-1.5 text-xs flex items-center gap-1"
+                  >
+                    Next <ChevronRight size={14} />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="px-4 py-1.5 text-xs font-semibold flex items-center gap-1.5"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 size={13} className="animate-spin" /> Submitting...
+                      </>
+                    ) : (
+                      <>
+                        Submit Quiz <ArrowRight size={14} />
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
-
-              {/* Progress/Bloom point update notification */}
-              <div className="text-[10px] text-sage-dark font-medium">
-                +15 XP for Sprout! 🌱
-              </div>
-            </div>
-
-            <p
-              className={`text-xs leading-relaxed ${
-                similarityScore >= 0.75
-                  ? 'text-moss'
-                  : similarityScore >= 0.50
-                  ? 'text-amber'
-                  : 'text-danger'
-              }`}
-            >
-              {feedbackMsg}
-            </p>
-
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleNext} className="text-xs py-1.5 flex items-center gap-1">
-                Continue <ArrowRight size={13} />
-              </Button>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

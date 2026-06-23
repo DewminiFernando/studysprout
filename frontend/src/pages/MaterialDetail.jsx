@@ -82,6 +82,9 @@ function MaterialDetail() {
                 <Button variant="secondary" onClick={() => navigate(`/study-mode/${id}`)} className="px-3 py-1.5 text-xs">
                   Study Mode
                 </Button>
+                <Button variant="secondary" onClick={() => navigate('/quiz-mode', { state: { materialId: id } })} className="px-3 py-1.5 text-xs">
+                  Practice Quiz
+                </Button>
                 <Button variant="ghost" onClick={() => navigate('/my-materials')} className="px-3 py-1.5 text-xs">
                   Close View
                 </Button>

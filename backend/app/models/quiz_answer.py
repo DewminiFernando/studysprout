@@ -13,6 +13,7 @@ class QuizAnswer(Base):
     similarity_score = Column(Float, nullable=True)
     result = Column(String(50), nullable=False)
     feedback = Column(Text, nullable=True)
+    points = Column(Float, nullable=True)
 
     # Relationships
     # Many quiz answers belong to one QuizAttempt
