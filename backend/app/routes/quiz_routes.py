@@ -15,6 +15,7 @@ from app.models.quiz_answer import QuizAnswer
 
 from app.services.answer_check_service import check_answer
 from app.services.weak_topic_service import calculate_weak_topics
+from app.services.plant_service import update_plant_progress
 
 from app.schemas.quiz_schema import (
     QuizStartRequest,
@@ -210,6 +211,17 @@ def submit_quiz(
 
     db.commit()
     db.refresh(db_attempt)
+
+    # Award plant progress XP
+    try:
+        user_id = cast(int, current_user.id)
+        # Complete quiz action (+20 XP)
+        update_plant_progress(db, user_id, "complete_quiz")
+        # High score action (+25 XP, only if score >= 70)
+        if score_percentage >= 70.0:
+            update_plant_progress(db, user_id, "high_score")
+    except Exception as e:
+        print(f"Failed to update plant progress during quiz submission: {e}")
 
     # Analyze weak topics from this specific attempt's results
     weak_topics_data = calculate_weak_topics(results_list)

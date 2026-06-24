@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status, File, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from typing import Optional, List
+from typing import Optional, List, cast
 from app.database import get_db
 from app.dependencies.auth_dependency import get_current_user
 from app.models.user import User
@@ -11,6 +11,7 @@ from app.models.question import Question
 from app.services.pdf_service import extract_text_from_pdf
 from app.services.llm_service import generate_study_guideline, generate_question_bank
 from app.services.question_service import replace_questions_for_material
+from app.services.plant_service import update_plant_progress
 from app.schemas.material_schema import (
     MaterialListResponse,
     MaterialDetailResponse,
@@ -60,12 +61,19 @@ def upload_material(
     db.commit()
     db.refresh(new_material)
 
+    # Award plant progress XP
+    try:
+        user_id = cast(int, current_user.id)
+        update_plant_progress(db, user_id, "upload_pdf")
+    except Exception as e:
+        print(f"Failed to update plant progress during PDF upload: {e}")
+
     return {
         "message": "Material uploaded and text extracted successfully.",
         "material": new_material
     }
 
-@router.get("", response_model=list[MaterialListResponse])
+@router.get("", response_model=List[MaterialListResponse])
 def get_materials(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -253,6 +261,13 @@ def generate_questions_endpoint(
             detail="This material has no extracted text. Please re-upload the PDF."
         )
 
+    # Check if questions already exist before generating, to avoid duplicate XP
+    has_existing_questions = (
+        db.query(Question)
+        .filter(Question.material_id == material_id)
+        .count() > 0
+    )
+
     # Call the LLM service to generate questions
     try:
         questions_data = generate_question_bank(material.extracted_text, question_count=10)
@@ -270,6 +285,14 @@ def generate_questions_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to save generated questions: {str(e)}"
         )
+
+    # Award plant progress XP if this is the first generation and questions were created
+    if not has_existing_questions and len(saved_questions) > 0:
+        try:
+            user_id = cast(int, current_user.id)
+            update_plant_progress(db, user_id, "generate_questions")
+        except Exception as e:
+            print(f"Failed to update plant progress during question generation: {e}")
 
     return saved_questions
 
