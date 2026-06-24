@@ -9,6 +9,7 @@ import PageHeader from '../components/ui/PageHeader';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import { materialAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const QUESTION_TYPES = [
   { value: '', label: 'All Types' },
@@ -21,6 +22,7 @@ const QUESTION_TYPES = [
 ];
 
 function QuestionBank() {
+  const { fetchPlantProgress } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
@@ -68,6 +70,7 @@ function QuestionBank() {
       setQuestions(response.data);
       setTopicFilter('');
       setTypeFilter('');
+      fetchPlantProgress();
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to generate questions. Please try again.');
     } finally {

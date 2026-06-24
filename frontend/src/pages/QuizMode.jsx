@@ -8,8 +8,10 @@ import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { quizAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 function QuizMode() {
+  const { fetchPlantProgress } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -92,6 +94,9 @@ function QuizMode() {
         material_id: parseInt(materialId),
         answers: formattedAnswers,
       });
+
+      // Update plant progress in sidebar widget
+      fetchPlantProgress();
 
       // Navigate to Results page, passing the backend response
       navigate('/results', {

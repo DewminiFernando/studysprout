@@ -4,8 +4,10 @@ import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import { materialAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 function UploadPDF() {
+  const { fetchPlantProgress } = useAuth();
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -71,6 +73,7 @@ function UploadPDF() {
       formData.append('file', file);
       await materialAPI.uploadPDF(formData);
       setSuccess(true);
+      fetchPlantProgress();
       setTimeout(() => {
         navigate('/my-materials');
       }, 1500);
