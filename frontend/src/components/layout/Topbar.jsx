@@ -4,7 +4,7 @@
 import { useAuth } from '../../context/AuthContext';
 
 function Topbar() {
-  const { user } = useAuth();
+  const { user, plantProgress } = useAuth();
 
   // Greeting based on time of day
   const getGreeting = () => {
@@ -12,6 +12,13 @@ function Topbar() {
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
+  };
+
+  const getSubTitle = () => {
+    if (!plantProgress) return 'Welcome back to your study space!';
+    if (plantProgress.stage === 'Seed') return 'Plant the seeds of knowledge today! 🌱';
+    if (plantProgress.stage === 'Flower') return 'Your plant has fully bloomed! Incredible job! 🌸';
+    return `Your plant is growing strong! Stage: ${plantProgress.stage}.`;
   };
 
   return (
@@ -22,15 +29,17 @@ function Topbar() {
           {getGreeting()}, {user?.name} 🌤️
         </div>
         <div className="text-xs text-text-muted">
-          3 materials · 2 quizzes pending
+          {getSubTitle()}
         </div>
       </div>
 
       {/* Right: Streak + Avatar */}
       <div className="flex items-center gap-2.5">
-        <div className="bg-amber-light text-amber text-[11px] px-2.5 py-1 rounded-full font-medium">
-          🔥 {user?.streak} day streak
-        </div>
+        {plantProgress && (
+          <div className="bg-amber-light text-amber text-[11px] px-2.5 py-1 rounded-full font-medium">
+            🔥 {plantProgress.study_streak} day streak
+          </div>
+        )}
         <div className="w-8 h-8 rounded-full bg-sage-light flex items-center justify-center text-xs font-medium text-sage-dark">
           {user?.initials}
         </div>

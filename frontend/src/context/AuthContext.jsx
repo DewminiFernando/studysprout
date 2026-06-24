@@ -3,14 +3,25 @@
 // Connects to the FastAPI backend.
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, plantAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [plantProgress, setPlantProgress] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Fetch the current user's plant progress from /plant/progress
+  const fetchPlantProgress = async () => {
+    try {
+      const response = await plantAPI.getProgress();
+      setPlantProgress(response.data);
+    } catch (err) {
+      console.error('Failed to fetch plant progress:', err);
+    }
+  };
 
   // Fetch the current user details from /auth/me
   const fetchCurrentUser = async () => {
@@ -27,25 +38,21 @@ export function AuthProvider({ children }) {
         .toUpperCase()
         .slice(0, 2) || 'U';
 
-      // We supplement the response with temporary default plant and streak stats for UI consistency
-      // until actual plant/streak routes are requested, satisfying the user's Sage/Cream design.
       const userData = {
         ...response.data,
         initials,
-        streak: response.data.streak ?? 0,
-        plantLevel: response.data.plantLevel ?? 1,
-        plantName: response.data.plantName ?? 'Seed',
-        plantEmoji: response.data.plantEmoji ?? '🌱',
-        plantXP: response.data.plantXP ?? 0,
-        plantMaxXP: response.data.plantMaxXP ?? 100,
       };
 
       setUser(userData);
       setIsAuthenticated(true);
+      
+      // Load real plant progress in parallel
+      fetchPlantProgress();
     } catch (err) {
       // If token is invalid or expired, clear it
       localStorage.removeItem('token');
       setUser(null);
+      setPlantProgress(null);
       setIsAuthenticated(false);
     } finally {
       setLoading(false);
@@ -59,6 +66,7 @@ export function AuthProvider({ children }) {
       fetchCurrentUser();
     } else {
       setUser(null);
+      setPlantProgress(null);
       setIsAuthenticated(false);
       setLoading(false);
     }
@@ -98,6 +106,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    setPlantProgress(null);
     setIsAuthenticated(false);
   };
 
@@ -105,12 +114,14 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user,
+        plantProgress,
         isAuthenticated,
         loading,
         login,
         register,
         logout,
         fetchCurrentUser,
+        fetchPlantProgress,
       }}
     >
       {children}

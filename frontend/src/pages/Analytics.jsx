@@ -16,43 +16,120 @@ import {
   Cell,
 } from 'recharts';
 import PageHeader from '../components/ui/PageHeader';
-import { analyticsData } from '../data/demoData';
-import { quizAPI } from '../services/api';
+import { quizAPI, plantAPI } from '../services/api';
+import { AlertCircle } from 'lucide-react';
 
 function Analytics() {
   const COLORS = ['#7A9E87', '#B8D4C0', '#4A7558', '#C8934A'];
 
+  const [history, setHistory] = useState([]);
   const [weakTopics, setWeakTopics] = useState([]);
-  const [loadingWeak, setLoadingWeak] = useState(true);
-  const [errorWeak, setErrorWeak] = useState('');
+  const [plant, setPlant] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchAnalyticsData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const [historyRes, weakTopicsRes, plantRes] = await Promise.all([
+        quizAPI.getQuizHistory(),
+        quizAPI.getWeakTopics(),
+        plantAPI.getProgress(),
+      ]);
+      setHistory(historyRes.data || []);
+      setWeakTopics(weakTopicsRes.data || []);
+      setPlant(plantRes.data || null);
+    } catch (err) {
+      console.error('Failed to load analytics:', err);
+      setError('Failed to load learning analytics data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchWeakTopics = async () => {
-      try {
-        setLoadingWeak(true);
-        setErrorWeak('');
-        const response = await quizAPI.getWeakTopics();
-        setWeakTopics(response.data || []);
-      } catch (err) {
-        console.error('Failed to load weak topics:', err);
-        setErrorWeak('Failed to load weak topics analysis.');
-      } finally {
-        setLoadingWeak(false);
-      }
-    };
-
-    fetchWeakTopics();
+    fetchAnalyticsData();
   }, []);
 
-  // Calculate some simple aggregates
-  const totalQuestions = analyticsData.topicBreakdown.reduce((acc, curr) => acc + curr.total, 0);
-  const correctQuestions = analyticsData.topicBreakdown.reduce((acc, curr) => acc + curr.correct, 0);
-  const overallMastery = Math.round((correctQuestions / totalQuestions) * 100);
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="w-10 h-10 border-4 border-sage border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p className="text-sm text-text-muted">Loading learning analytics...</p>
+      </div>
+    );
+  }
 
-  const pieData = analyticsData.topicBreakdown.map((t) => ({
-    name: t.topic,
-    value: t.correct,
-  }));
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto mt-4">
+        <div className="bg-danger-light/20 border border-danger/20 text-danger text-sm rounded-xl p-4 flex items-center gap-3">
+          <AlertCircle size={18} className="flex-shrink-0" />
+          <span>{error}</span>
+          <button onClick={fetchAnalyticsData} className="text-xs font-semibold underline ml-auto bg-transparent border-none cursor-pointer">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (history.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-4">
+        <PageHeader
+          title="Learning Analytics"
+          description="Monitor study completion, diagnostic quiz performance, and topic weaknesses over time."
+          icon={BarChart3}
+        />
+        <div className="bg-paper border border-card rounded-xl p-10 text-center flex flex-col items-center justify-center mt-4">
+          <div className="w-12 h-12 bg-sage-pale text-sage rounded-full flex items-center justify-center mb-3">
+            <BarChart3 size={24} />
+          </div>
+          <h3 className="text-sm font-semibold text-text-base">No analytics data yet</h3>
+          <p className="text-xs text-text-muted mt-1 max-w-sm mx-auto">
+            Take a practice quiz in Quiz Mode first! Once you complete a quiz, your score trends, weak topics, and mastery insights will appear here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate aggregates
+  const completedQuizzesCount = history.length;
+  const averageScore = Math.round(history.reduce((sum, h) => sum + h.score, 0) / completedQuizzesCount);
+  const bestScore = Math.round(Math.max(...history.map((h) => h.score)));
+  const studyStreak = plant ? plant.study_streak : 0;
+  const plantStage = plant ? `${plant.stage} · Lvl ${plant.level}` : 'Seed · Lvl 1';
+
+  // Format Quiz history scores for trend chart (take up to last 7 attempts in chronological order)
+  const weeklyScores = history
+    .slice(0, 7)
+    .reverse()
+    .map((h, idx) => ({
+      week: new Date(h.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+      score: Math.round(h.score),
+    }));
+
+  // Topic mastery pie chart data: calculate correct vs incorrect per topic using weakTopics list
+  const topicBreakdown = weakTopics.map((wt) => {
+    const correct = wt.total_questions - wt.weak_answers;
+    return {
+      topic: wt.topic,
+      correct: correct,
+      total: wt.total_questions,
+      accuracy: Math.round((correct / wt.total_questions) * 100),
+    };
+  });
+
+  const totalQuestions = topicBreakdown.reduce((acc, curr) => acc + curr.total, 0);
+  const correctQuestions = topicBreakdown.reduce((acc, curr) => acc + curr.correct, 0);
+  const overallMastery = totalQuestions > 0 ? Math.round((correctQuestions / totalQuestions) * 100) : averageScore;
+
+  const pieData = topicBreakdown.length > 0 
+    ? topicBreakdown.map((t) => ({ name: t.topic, value: t.correct }))
+    : [{ name: 'All Mastered', value: 100 }];
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
@@ -63,14 +140,14 @@ function Analytics() {
       />
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <div className="bg-paper border border-card rounded-xl p-4 flex items-center gap-3">
           <div className="w-9 h-9 bg-sage-pale text-sage-dark rounded-lg flex items-center justify-center">
             <TrendingUp size={18} />
           </div>
           <div>
             <div className="text-xl font-semibold text-text-base">{overallMastery}%</div>
-            <div className="text-[10px] text-text-muted mt-0.5">Average Topic Accuracy</div>
+            <div className="text-[10px] text-text-muted mt-0.5">Avg Quiz Accuracy</div>
           </div>
         </div>
 
@@ -79,7 +156,7 @@ function Analytics() {
             <Award size={18} />
           </div>
           <div>
-            <div className="text-xl font-semibold text-text-base">Level 3</div>
+            <div className="text-base font-semibold text-text-base truncate max-w-[120px] capitalize">{plantStage}</div>
             <div className="text-[10px] text-text-muted mt-0.5">Plant Growth Stage</div>
           </div>
         </div>
@@ -89,8 +166,18 @@ function Analytics() {
             <Clock size={18} />
           </div>
           <div>
-            <div className="text-xl font-semibold text-text-base">5 Days</div>
+            <div className="text-xl font-semibold text-text-base">{studyStreak} Days</div>
             <div className="text-[10px] text-text-muted mt-0.5">Active Study Streak</div>
+          </div>
+        </div>
+
+        <div className="bg-paper border border-card rounded-xl p-4 flex items-center gap-3">
+          <div className="w-9 h-9 bg-sage-pale text-sage-dark rounded-lg flex items-center justify-center">
+            <Award size={18} />
+          </div>
+          <div>
+            <div className="text-xl font-semibold text-text-base">{bestScore}%</div>
+            <div className="text-[10px] text-text-muted mt-0.5">Best Quiz Score</div>
           </div>
         </div>
       </div>
@@ -102,7 +189,7 @@ function Analytics() {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={analyticsData.weeklyScores}
+                data={weeklyScores}
                 margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#EDE9DF" />
@@ -156,17 +243,21 @@ function Analytics() {
             </div>
             {/* Custom Legend */}
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2">
-              {analyticsData.topicBreakdown.map((t, idx) => (
-                <div key={t.topic} className="flex items-center gap-1.5 text-[10px] text-text-muted">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full inline-block"
-                    style={{ backgroundColor: COLORS[idx % COLORS.length] }}
-                  />
-                  <span>
-                    {t.topic} ({Math.round((t.correct / t.total) * 100)}%)
-                  </span>
-                </div>
-              ))}
+              {topicBreakdown.length === 0 ? (
+                <div className="text-[10px] text-text-muted italic">All topics masterfully answered! 🌟</div>
+              ) : (
+                topicBreakdown.map((t, idx) => (
+                  <div key={t.topic} className="flex items-center gap-1.5 text-[10px] text-text-muted">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full inline-block"
+                      style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+                    />
+                    <span>
+                      {t.topic} ({t.accuracy}%)
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -178,15 +269,8 @@ function Analytics() {
           Weak Topics Analysis
         </h3>
 
-        {loadingWeak ? (
-          <div className="flex flex-col items-center justify-center py-10">
-            <div className="w-7 h-7 border-3 border-sage border-t-transparent rounded-full animate-spin mb-3"></div>
-            <p className="text-xs text-text-muted">Loading weakness analytics...</p>
-          </div>
-        ) : errorWeak ? (
-          <div className="text-xs text-danger text-center py-6">{errorWeak}</div>
-        ) : weakTopics.length === 0 ? (
-          <div className="text-center py-8 bg-cream/20 rounded-xl border border-dashed border-cream-darker/60">
+        {weakTopics.length === 0 ? (
+          <div className="text-center py-8 bg-[#EAF3DE]/10 rounded-xl border border-dashed border-sage-light/40">
             <p className="text-xs text-text-muted font-medium">No weak topics detected yet! 🌱</p>
             <p className="text-[10px] text-text-light mt-1">Take practice quizzes to identify subjects needing revision.</p>
           </div>

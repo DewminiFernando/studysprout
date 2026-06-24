@@ -1,6 +1,5 @@
-// ─── API service placeholder ───
-// This file will later connect to the FastAPI backend.
-// For now, all data comes from demoData.js.
+// ─── API service integration ───
+// Connects the frontend to the FastAPI backend.
 
 import axios from 'axios';
 
@@ -71,6 +70,15 @@ export const quizAPI = {
 export const analyticsAPI = {
   getDashboard: () => api.get('/analytics/dashboard'),
   getWeakTopics: () => api.get('/analytics/weak-topics'),
+};
+
+export const dashboardAPI = {
+  getSummary: () => api.get('/dashboard/summary'),
+};
+
+export const plantAPI = {
+  getProgress: () => api.get('/plant/progress'),
+  updateProgress: (action) => api.patch('/plant/update', { action }),
 };
 
 export default api;

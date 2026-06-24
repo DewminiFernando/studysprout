@@ -1,11 +1,30 @@
 // ─── PlantWidget component ───
 // Shows the user's plant growth progress in the sidebar.
 
-import { currentUser } from '../../data/demoData';
+import { useAuth } from '../../context/AuthContext';
 
 function PlantWidget() {
-  const { plantEmoji, plantName, plantXP, plantMaxXP } = currentUser;
-  const progressPercent = Math.round((plantXP / plantMaxXP) * 100);
+  const { plantProgress } = useAuth();
+
+  if (!plantProgress) {
+    return (
+      <div className="bg-paper rounded-xl p-3 border border-card flex items-center justify-center h-16">
+        <div className="w-5 h-5 border-2 border-sage border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const { stage, level, xp, next_stage_xp } = plantProgress;
+  const progressPercent = next_stage_xp > 0 ? Math.round((xp / next_stage_xp) * 100) : 100;
+
+  const stageEmojis = {
+    'Seed': '🌱',
+    'Sprout': '🌿',
+    'Small Plant': '🪴',
+    'Growing Plant': '🌳',
+    'Flower': '🌸',
+  };
+  const plantEmoji = stageEmojis[stage] || '🌱';
 
   return (
     <div className="bg-paper rounded-xl p-3 border border-card">
@@ -13,11 +32,13 @@ function PlantWidget() {
       <div className="text-lg mb-1">{plantEmoji}</div>
 
       {/* Plant label */}
-      <div className="text-[11px] font-medium text-sage-dark">{plantName}</div>
+      <div className="text-[11px] font-medium text-sage-dark capitalize">
+        {stage} · Lvl {level}
+      </div>
 
       {/* XP info */}
-      <div className="text-[11px] text-text-muted mt-1 mb-1.5">
-        {plantXP} / {plantMaxXP} pts to bloom
+      <div className="text-[10px] text-text-muted mt-1 mb-1.5">
+        {xp} / {next_stage_xp} XP to bloom
       </div>
 
       {/* Progress bar */}

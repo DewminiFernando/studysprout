@@ -4,8 +4,24 @@
 import { NavLink } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import PlantWidget from '../ui/PlantWidget';
-import { sidebarNavItems } from '../../data/demoData';
 import { useAuth } from '../../context/AuthContext';
+
+const SIDEBAR_NAV_ITEMS = {
+  main: [
+    { label: 'Dashboard', icon: 'LayoutDashboard', path: '/dashboard' },
+    { label: 'Upload PDF', icon: 'Upload', path: '/upload-pdf' },
+    { label: 'My Materials', icon: 'BookOpen', path: '/my-materials' },
+  ],
+  study: [
+    { label: 'Question Bank', icon: 'ListChecks', path: '/question-bank' },
+    { label: 'Quiz Mode', icon: 'Pencil', path: '/quiz-mode' },
+    { label: 'Study Mode', icon: 'Eye', path: '/study-mode' },
+  ],
+  progress: [
+    { label: 'Analytics', icon: 'BarChart3', path: '/analytics' },
+    { label: 'My Plant', icon: 'Leaf', path: '/plant-progress' },
+  ],
+};
 
 function Sidebar() {
   const { logout } = useAuth();
@@ -56,13 +72,13 @@ function Sidebar() {
 
       {/* Navigation */}
       {renderSection('Main')}
-      {sidebarNavItems.main.map(renderNavItem)}
+      {SIDEBAR_NAV_ITEMS.main.map(renderNavItem)}
 
       {renderSection('Study')}
-      {sidebarNavItems.study.map(renderNavItem)}
+      {SIDEBAR_NAV_ITEMS.study.map(renderNavItem)}
 
       {renderSection('Progress')}
-      {sidebarNavItems.progress.map(renderNavItem)}
+      {SIDEBAR_NAV_ITEMS.progress.map(renderNavItem)}
 
       {/* Spacer */}
       <div className="flex-1" />

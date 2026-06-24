@@ -3,10 +3,10 @@
 
 import { useNavigate } from 'react-router-dom';
 import MaterialCard from '../ui/MaterialCard';
-import { recentMaterials } from '../../data/demoData';
 
-function RecentMaterials() {
+function RecentMaterials({ materials }) {
   const navigate = useNavigate();
+  const displayMaterials = materials || [];
 
   return (
     <div>
@@ -15,20 +15,28 @@ function RecentMaterials() {
         <div className="text-[13px] font-medium text-text-base">
           Recent materials
         </div>
-        <button
-          onClick={() => navigate('/my-materials')}
-          className="text-[11px] text-sage-dark cursor-pointer hover:underline bg-transparent border-none"
-        >
-          See all →
-        </button>
+        {displayMaterials.length > 0 && (
+          <button
+            onClick={() => navigate('/my-materials')}
+            className="text-[11px] text-sage-dark cursor-pointer hover:underline bg-transparent border-none"
+          >
+            See all →
+          </button>
+        )}
       </div>
 
       {/* Materials grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-        {recentMaterials.slice(0, 2).map((material) => (
-          <MaterialCard key={material.id} material={material} />
-        ))}
-      </div>
+      {displayMaterials.length === 0 ? (
+        <div className="text-center py-6 bg-cream/10 rounded-xl border border-dashed border-cream-darker/40 text-xs text-text-muted">
+          No materials uploaded yet. 🌱 Get started by uploading a PDF!
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          {displayMaterials.map((material) => (
+            <MaterialCard key={material.id} material={material} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
