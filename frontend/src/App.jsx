@@ -40,9 +40,22 @@ function App() {
               <Route path="/my-materials" element={<MyMaterials />} />
               <Route path="/materials/:id" element={<MaterialDetail />} />
               <Route path="/study-guideline/:id" element={<StudyGuideline />} />
+
+              {/* Question Bank — generic (material picker) + parameterized */}
+              <Route path="/question-bank" element={<QuestionBank />} />
               <Route path="/question-bank/:id" element={<QuestionBank />} />
+
+              {/* Study Mode — generic (material picker) + parameterized */}
+              <Route path="/study-mode" element={<StudyMode />} />
               <Route path="/study-mode/:id" element={<StudyMode />} />
-              <Route path="/quiz-mode" element={<QuizMode />} />
+
+              {/* Quiz — generic (material picker) + parameterized */}
+              <Route path="/quiz" element={<QuizMode />} />
+              <Route path="/quiz/:id" element={<QuizMode />} />
+
+              {/* Compatibility redirect: old /quiz-mode → /quiz */}
+              <Route path="/quiz-mode" element={<Navigate to="/quiz" replace />} />
+
               <Route path="/results" element={<Results />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/plant-progress" element={<PlantProgress />} />

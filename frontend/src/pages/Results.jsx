@@ -109,7 +109,7 @@ function Results() {
           </Button>
           <Button
             variant="secondary"
-            onClick={() => navigate('/quiz-mode', { state: { materialId: material_id } })}
+            onClick={() => navigate(material_id ? `/quiz/${material_id}` : '/quiz')}
             className="flex-1 justify-center py-2 text-xs"
           >
             <RefreshCw size={13} className="mr-1" /> Retake Quiz
