@@ -145,7 +145,12 @@ def submit_quiz(
         correct_answer = cast(str, question.correct_answer)
         explanation = cast(Optional[str], question.explanation)
 
-        check_res = check_answer(ans_input.student_answer, correct_answer)
+        answer_for_checking = correct_answer
+
+        if explanation:
+            answer_for_checking = f"{correct_answer}. {explanation}"
+
+        check_res = check_answer(ans_input.student_answer, answer_for_checking)
 
         sim_score = cast(float, check_res["similarity_score"])
         res_label = cast(str, check_res["result"])

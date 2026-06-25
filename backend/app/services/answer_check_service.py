@@ -30,6 +30,16 @@ def check_answer(student_answer: str, correct_answer: str) -> dict:
             "points": 0.0
         }
         
+    student_clean = student_answer.strip().lower()
+    correct_clean = correct_answer.strip().lower()
+
+    if student_clean == correct_clean:
+        return {
+            "similarity_score": 1.0,
+            "result": "Correct",
+            "points": 1.0
+        }
+        
     # Get cached model
     model = get_model()
     
