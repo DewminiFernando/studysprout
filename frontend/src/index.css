@@ -1,18 +1,37 @@
+/* ── Google Fonts ── */
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS Custom Properties ── */
+:root {
+  --sage:            #4A7558;
+  --sage-light:      #7A9E87;
+  --sage-pale:       #EEF7F0;
+  --cream:           #F5F2EB;
+  --white:           #FFFFFF;
+  --text-dark:       #2C3A2E;
+  --text-muted:      #7A9E87;
+  --border:          #D8E8D8;
+  --accent-pink:     #F4C0D1;
+  --accent-lavender: #C8B4E8;
+  --accent-amber:    #F5C28A;
+  --accent-peach:    #F5C4B3;
+}
+
 /* ── Base resets ── */
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 body {
-  font-family: 'DM Sans', sans-serif;
-  background-color: #F5F2EB;
-  color: #2C3A2E;
+  font-family: 'Nunito', sans-serif;
+  background-color: var(--cream);
+  color: var(--text-dark);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -29,7 +48,7 @@ body {
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #7A9E87;
+  background: var(--sage-light);
 }
 
 /* ── Custom utility classes ── */
@@ -37,12 +56,15 @@ body {
   .font-caveat {
     font-family: 'Caveat', cursive;
   }
+  .font-dm-mono {
+    font-family: 'DM Mono', monospace;
+  }
 }
 
 /* ── Plant shimmer animation ── */
 @keyframes shimmer {
   0%, 100% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
+  50%       { transform: translateX(100%); }
 }
 
 .shimmer {
