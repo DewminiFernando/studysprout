@@ -50,36 +50,6 @@ Detect weak topics
 Update dashboard and plant progress
 ```
 
----
-
-## Current Project Status
-
-This project is in the early development stage.
-
-Currently completed:
-
-* Project folder structure created
-* React + Vite frontend setup
-* FastAPI backend setup
-* Python virtual environment configured
-* Basic backend API running
-* CORS configured for frontend-backend connection
-* Initial project design direction planned
-
-Next development steps:
-
-* Create backend route files
-* Add PostgreSQL database connection
-* Create database models
-* Implement user authentication
-* Add PDF upload endpoint
-* Add PDF text extraction
-* Add AI study guide generation
-* Add question generation
-* Add quiz and semantic answer checking
-
----
-
 ## Tech Stack
 
 ### Frontend
