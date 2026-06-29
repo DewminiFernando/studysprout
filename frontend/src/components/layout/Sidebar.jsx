@@ -1,13 +1,14 @@
 // ─── Sidebar component ───
-// Left navigation panel with logo, nav items, and plant widget.
-// Logo uses Caveat; all nav labels use Nunito (inherits from body).
+// Left navigation: logo, nav sections, plant widget, logout.
+// Background: #4A7558 (--ss-sidebar). All text is white/translucent.
+// Active nav item: rgba(255,255,255,0.15) bg + 2px right border #C8934A.
 
 import { NavLink } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import PlantWidget from '../ui/PlantWidget';
 import { useAuth } from '../../context/AuthContext';
 
-const SIDEBAR_NAV_ITEMS = {
+const SIDEBAR_NAV = {
   main: [
     { label: 'Dashboard',    icon: 'LayoutDashboard', path: '/dashboard' },
     { label: 'Upload PDF',   icon: 'Upload',          path: '/upload-pdf' },
@@ -16,7 +17,7 @@ const SIDEBAR_NAV_ITEMS = {
   study: [
     { label: 'Question Bank', icon: 'ListChecks', path: '/question-bank' },
     { label: 'Quiz Mode',     icon: 'Pencil',     path: '/quiz' },
-    { label: 'Study Mode',    icon: 'Eye',         path: '/study-mode' },
+    { label: 'Study Mode',    icon: 'Eye',        path: '/study-mode' },
   ],
   progress: [
     { label: 'Analytics', icon: 'BarChart3', path: '/analytics' },
@@ -24,77 +25,144 @@ const SIDEBAR_NAV_ITEMS = {
   ],
 };
 
+function SectionLabel({ children }) {
+  return (
+    <div
+      style={{
+        fontSize: '9px',
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        color: 'rgba(255,255,255,0.4)',
+        padding: '14px 14px 5px',
+        fontWeight: 500,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function NavItem({ item }) {
+  const IconComponent = Icons[item.icon] || Icons.Circle;
+  return (
+    <NavLink
+      to={item.path}
+      className={({ isActive }) =>
+        `flex items-center gap-2 no-underline transition-all duration-150 ${
+          isActive ? 'ss-nav-active' : 'ss-nav-idle'
+        }`
+      }
+      style={({ isActive }) => ({
+        fontSize: '12.5px',
+        minHeight: '34px',
+        padding: '7px 14px',
+        color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
+        background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
+        borderRight: isActive ? '2px solid #C8934A' : '2px solid transparent',
+        fontWeight: isActive ? 500 : 400,
+      })}
+    >
+      {({ isActive }) => (
+        <>
+          <IconComponent
+            size={14}
+            style={{ color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.7)', flexShrink: 0 }}
+          />
+          {item.label}
+        </>
+      )}
+    </NavLink>
+  );
+}
+
 function Sidebar() {
   const { logout } = useAuth();
 
-  const renderNavItem = (item) => {
-    const IconComponent = Icons[item.icon] || Icons.Circle;
-    return (
-      <NavLink
-        key={item.path}
-        to={item.path}
-        className={({ isActive }) =>
-          `flex items-center gap-2.5 py-2.5 px-[18px] text-[13px] cursor-pointer transition-all duration-150 no-underline ${
-            isActive
-              ? 'bg-white text-sage font-semibold border-r-2 border-sage'
-              : 'text-text-muted hover:text-text-base hover:bg-white/60'
-          }`
-        }
-      >
-        <IconComponent size={15} />
-        {item.label}
-      </NavLink>
-    );
-  };
-
-  const renderSection = (title) => (
-    <div
-      key={title}
-      className="text-[9px] tracking-[0.12em] uppercase text-text-light px-[18px] pt-4 pb-1.5 font-semibold"
-    >
-      {title}
-    </div>
-  );
-
   return (
-    <aside className="w-[204px] flex-shrink-0 bg-sage-pale border-r border-[#D8E8D8] flex flex-col py-5 h-screen sticky top-0">
-      {/* Logo — Caveat for brand name only */}
-      <div className="px-[18px] pb-5 flex items-center gap-2.5">
-        <div className="w-8 h-8 bg-sage rounded-xl flex items-center justify-center text-base">
-          🌱
+    <aside
+      style={{
+        width: '168px',
+        background: 'var(--ss-sidebar)',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        position: 'sticky',
+        top: 0,
+        flexShrink: 0,
+        overflowY: 'auto',
+      }}
+    >
+      {/* ── Logo ── */}
+      <div style={{ padding: '16px 14px 12px' }}>
+        <div
+          style={{
+            fontFamily: 'Caveat, cursive',
+            fontWeight: 700,
+            fontSize: '20px',
+            color: '#FFFFFF',
+            lineHeight: 1.1,
+          }}
+        >
+          🌱 StudySprout
         </div>
-        <div>
-          <div className="font-caveat text-[17px] font-bold text-sage leading-tight">
-            StudySprout
-          </div>
-          <div className="text-[9px] text-text-light tracking-wide">AI Study Assistant</div>
+        <div
+          style={{
+            fontSize: '10px',
+            color: 'rgba(255,255,255,0.55)',
+            marginTop: '2px',
+            letterSpacing: '0.02em',
+          }}
+        >
+          AI Study Assistant
         </div>
       </div>
 
-      {/* Navigation */}
-      {renderSection('Main')}
-      {SIDEBAR_NAV_ITEMS.main.map(renderNavItem)}
+      {/* ── Navigation ── */}
+      <SectionLabel>Main</SectionLabel>
+      {SIDEBAR_NAV.main.map((item) => (
+        <NavItem key={item.path} item={item} />
+      ))}
 
-      {renderSection('Study')}
-      {SIDEBAR_NAV_ITEMS.study.map(renderNavItem)}
+      <SectionLabel>Study</SectionLabel>
+      {SIDEBAR_NAV.study.map((item) => (
+        <NavItem key={item.path} item={item} />
+      ))}
 
-      {renderSection('Progress')}
-      {SIDEBAR_NAV_ITEMS.progress.map(renderNavItem)}
+      <SectionLabel>Progress</SectionLabel>
+      {SIDEBAR_NAV.progress.map((item) => (
+        <NavItem key={item.path} item={item} />
+      ))}
 
-      {/* Spacer */}
-      <div className="flex-1" />
+      {/* ── Spacer ── */}
+      <div style={{ flex: 1 }} />
 
-      {/* Plant widget */}
-      <div className="mx-[14px] mb-2">
+      {/* ── Plant widget ── */}
+      <div style={{ margin: '0 10px 8px' }}>
         <PlantWidget />
       </div>
 
-      {/* Logout button */}
+      {/* ── Logout ── */}
       <button
         onClick={logout}
-        className="flex items-center gap-2.5 py-2 px-[18px] mx-[14px] mb-4 text-[13px] font-semibold text-danger hover:bg-danger-light/30 rounded-[10px] cursor-pointer transition-all duration-150 border-0 bg-transparent text-left"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          margin: '0 10px 14px',
+          padding: '7px 10px',
+          background: 'rgba(226,75,74,0.18)',
+          border: 'none',
+          borderRadius: '8px',
+          color: '#FFB3B3',
+          fontSize: '12.5px',
+          cursor: 'pointer',
+          transition: 'background 150ms',
+          fontFamily: 'DM Sans, sans-serif',
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(226,75,74,0.28)')}
+        onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(226,75,74,0.18)')}
       >
-        <Icons.LogOut size={15} />
+        <Icons.LogOut size={14} />
         Log out
       </button>
     </aside>
