@@ -1,24 +1,51 @@
 /* ── Google Fonts ── */
-@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── CSS Custom Properties ── */
+/* ── CSS Custom Properties (ss-* tokens) ── */
 :root {
-  --sage:            #4A7558;
-  --sage-light:      #7A9E87;
-  --sage-pale:       #EEF7F0;
-  --cream:           #F5F2EB;
-  --white:           #FFFFFF;
-  --text-dark:       #2C3A2E;
-  --text-muted:      #7A9E87;
-  --border:          #D8E8D8;
-  --accent-pink:     #F4C0D1;
-  --accent-lavender: #C8B4E8;
-  --accent-amber:    #F5C28A;
-  --accent-peach:    #F5C4B3;
+  /* Surfaces */
+  --ss-bg:            #F0EDE8;
+  --ss-surface:       #FFFFFF;
+  --ss-surface-green: #EAF2EC;
+  --ss-inner:         #F7F5F1;
+
+  /* Brand green */
+  --ss-green:         #4A7558;
+  --ss-mid-green:     #7A9E87;
+  --ss-light-green:   #B8D4C0;
+  --ss-pale-green:    #EAF2EC;
+  --ss-sidebar:       #4A7558;
+
+  /* Amber accent */
+  --ss-amber:         #C8934A;
+  --ss-amber-light:   #FFF3E0;
+  --ss-amber-border:  #F4A535;
+  --ss-amber-text:    #7A4F00;
+
+  /* Semantic */
+  --ss-danger:        #E24B4A;
+  --ss-danger-bg:     #FCEBEB;
+  --ss-danger-text:   #A32D2D;
+  --ss-warning:       #EF9F27;
+  --ss-warning-bg:    #FFF8E1;
+  --ss-success-bg:    #EAF2EC;
+  --ss-success-text:  #3B6D11;
+
+  /* Text */
+  --ss-text:          #2C3A2E;
+  --ss-muted:         #6B7E6E;
+  --ss-subtle:        #9CA89D;
+
+  /* Borders */
+  --ss-border:        #D6E4D8;
+  --ss-border-inner:  #EEF2EF;
+
+  /* Spacing / radius */
+  --ss-radius:        10px;
 }
 
 /* ── Base resets ── */
@@ -28,31 +55,41 @@
   padding: 0;
 }
 
+html, body {
+  height: 100%;
+}
+
 body {
-  font-family: 'Nunito', sans-serif;
-  background-color: var(--cream);
-  color: var(--text-dark);
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--ss-bg);
+  color: var(--ss-text);
+  font-size: 13px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* ── Scrollbar styling ── */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #B8D4C0;
+  background: var(--ss-light-green);
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--sage-light);
+  background: var(--ss-mid-green);
 }
 
-/* ── Custom utility classes ── */
+/* ── Typography utilities ── */
 @layer utilities {
+  .font-display {
+    font-family: 'Caveat', cursive;
+  }
+  /* Legacy compat */
   .font-caveat {
     font-family: 'Caveat', cursive;
   }
@@ -61,7 +98,13 @@ body {
   }
 }
 
-/* ── Plant shimmer animation ── */
+/* ── Focus ring ── */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ss-light-green);
+}
+
+/* ── Progress bar shimmer animation ── */
 @keyframes shimmer {
   0%, 100% { transform: translateX(-100%); }
   50%       { transform: translateX(100%); }
@@ -82,4 +125,19 @@ body {
     transparent 70%
   );
   animation: shimmer 2.8s ease-in-out infinite;
+}
+
+/* ── Annotation banner (dev/review mode) ── */
+.ss-annotation-banner {
+  background: var(--ss-warning-bg);
+  border-left: 3px solid var(--ss-amber);
+  border-radius: 0 6px 6px 0;
+  padding: 6px 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  color: #5A3A00;
+  line-height: 1.4;
+  margin-bottom: 10px;
 }
