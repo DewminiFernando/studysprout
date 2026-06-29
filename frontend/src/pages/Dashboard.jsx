@@ -1,21 +1,26 @@
 // ─── Dashboard page ───
-// Main overview page with stats, upload CTA, materials, and weak topics.
+// Redesigned main overview page per design spec.
+// Layout: Topbar, XP Hero Banner, Continue Card, StatsGrid, sections.
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, ArrowRight, Upload, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { dashboardAPI, plantAPI } from '../services/api';
+
+import Topbar from '../components/layout/Topbar';
 import StatsGrid from '../components/dashboard/StatsGrid';
 import RecentMaterials from '../components/dashboard/RecentMaterials';
 import WeakTopics from '../components/dashboard/WeakTopics';
-import UploadCard from '../components/ui/UploadCard';
-import { dashboardAPI } from '../services/api';
-import { AlertCircle, Leaf } from 'lucide-react';
-
-const DASHBOARD_TABS = ['Overview', 'Weak topics', 'History'];
 
 function Dashboard() {
-  const [activeTab, setActiveTab] = useState('Overview');
+  const { fetchPlantProgress } = useAuth();
+  const navigate = useNavigate();
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [earningXp, setEarningXp] = useState(false);
 
   const fetchSummary = async () => {
     try {
@@ -35,153 +40,277 @@ function Dashboard() {
     fetchSummary();
   }, []);
 
+  const handleEarnXp = async () => {
+    if (earningXp) return;
+    try {
+      setEarningXp(true);
+      await plantAPI.updateProgress('revise_weak_topic');
+      // Sync auth context progress + page progress
+      await fetchPlantProgress();
+      await fetchSummary();
+    } catch (err) {
+      console.error('Failed to earn XP:', err);
+      // Fallback to quiz
+      navigate('/quiz');
+    } finally {
+      setEarningXp(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <div className="w-10 h-10 border-4 border-sage border-t-transparent rounded-full animate-spin mb-3"></div>
-        <p className="text-sm text-text-muted">Loading your study dashboard...</p>
+        <div className="w-10 h-10 border-4 border-ss-green border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p className="text-sm text-ss-muted">Loading your study dashboard...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-danger-light/20 border border-danger/20 text-danger text-sm rounded-xl p-4 flex items-center gap-3 mt-4">
+      <div className="bg-ss-danger-bg border border-ss-danger text-ss-danger-text text-sm rounded-xl p-4 flex items-center gap-3 mt-4">
         <AlertCircle size={18} className="flex-shrink-0" />
         <span>{error}</span>
-        <button onClick={fetchSummary} className="text-xs font-semibold underline ml-auto bg-transparent border-none cursor-pointer">
+        <button
+          onClick={fetchSummary}
+          className="text-xs font-semibold underline ml-auto bg-transparent border-none cursor-pointer"
+        >
           Retry
         </button>
       </div>
     );
   }
 
+  // Determine Continue studying card vs Upload prompt card
+  // Pull the most recently quizzed material (first one in recent_materials with a quiz score)
+  const quizzedMaterials = data.recent_materials?.filter(
+    (m) => m.lastScore && m.lastScore !== 'N/A'
+  ) || [];
+
+  const resumeMaterial = quizzedMaterials.length > 0 ? quizzedMaterials[0] : null;
+
+  // Stage Emojis mapping
+  const stageEmojis = {
+    'Seed':          '🌱',
+    'Sprout':        '🌿',
+    'Small Plant':   '🪴',
+    'Growing Plant': '🌳',
+    'Flower':        '🌸',
+  };
+  const plantEmoji = stageEmojis[data.plant_progress.stage] || '🌱';
+  const xpPercent = data.plant_progress.next_stage_xp > 0
+    ? Math.min((data.plant_progress.xp / data.plant_progress.next_stage_xp) * 100, 100)
+    : 100;
   return (
-    <div className="flex flex-col gap-4">
-      {/* Tabs */}
-      <div className="flex gap-0 border-b border-card -mx-6 px-6">
-        {DASHBOARD_TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`text-xs px-3.5 py-2.5 cursor-pointer border-b-2 -mb-px transition-colors bg-transparent ${
-              activeTab === tab
-                ? 'text-sage-dark border-sage font-medium'
-                : 'text-text-muted border-transparent hover:text-text-base'
-            }`}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Topbar row */}
+      <Topbar />
+
+      {/* ── 3. XP Hero Banner ── */}
+      <div
+        style={{
+          background: 'var(--ss-green)',
+          borderRadius: '10px',
+          padding: '12px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '14px',
+          marginBottom: '14px',
+        }}
+      >
+        <div style={{ fontSize: '28px', lineHeight: 1 }}>{plantEmoji}</div>
+        
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '13px', fontWeight: 500, color: '#FFFFFF', lineHeight: 1.2 }}>
+            {data.plant_progress.stage} · Level {data.plant_progress.level}
+          </div>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.65)', marginTop: '2px' }}>
+            {data.plant_progress.xp_needed > 0
+              ? `${data.plant_progress.xp_needed} XP needed to sprout — keep going!`
+              : 'Max stage reached!'}
+          </div>
+          {/* Progress bar */}
+          <div
+            style={{
+              height: '8px',
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '6px',
+              overflow: 'hidden',
+              marginTop: '6px',
+            }}
           >
-            {tab}
-          </button>
-        ))}
+            <div
+              className="shimmer"
+              style={{
+                height: '100%',
+                width: `${xpPercent}%`,
+                background: '#C8934A',
+                borderRadius: '6px',
+                transition: 'width 0.5s ease',
+              }}
+            />
+          </div>
+          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.55)', marginTop: '3px' }}>
+            {data.plant_progress.xp} / {data.plant_progress.next_stage_xp} XP
+          </div>
+        </div>
+
+        <button
+          onClick={handleEarnXp}
+          disabled={earningXp}
+          style={{
+            background: '#C8934A',
+            color: '#FFFFFF',
+            borderRadius: '8px',
+            padding: '7px 14px',
+            fontSize: '12px',
+            fontWeight: 500,
+            fontFamily: 'DM Sans, sans-serif',
+            border: 'none',
+            cursor: earningXp ? 'not-allowed' : 'pointer',
+            transition: 'background 150ms',
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={(e) => {
+            if (!earningXp) e.currentTarget.style.background = '#b2813e';
+          }}
+          onMouseLeave={(e) => {
+            if (!earningXp) e.currentTarget.style.background = '#C8934A';
+          }}
+        >
+          {earningXp ? 'Completing...' : '+ Earn XP'}
+        </button>
       </div>
 
-      {/* Overview Tab Content */}
-      {activeTab === 'Overview' && (
-        <>
-          {/* Plant progress widget banner */}
-          <div className="bg-paper border border-card rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="text-3xl animate-bounce duration-1000">
-                {data.plant_progress.stage === 'Seed' && '🌱'}
-                {data.plant_progress.stage === 'Sprout' && '🌿'}
-                {data.plant_progress.stage === 'Small Plant' && '🪴'}
-                {data.plant_progress.stage === 'Growing Plant' && '🌳'}
-                {data.plant_progress.stage === 'Flower' && '🌸'}
-              </div>
-              <div>
-                <h3 className="text-xs font-semibold text-text-base leading-none capitalize">
-                  {data.plant_progress.stage} · Level {data.plant_progress.level}
-                </h3>
-                <p className="text-[10px] text-text-muted mt-1 font-medium">
-                  {data.plant_progress.xp_needed > 0
-                    ? `${data.plant_progress.xp_needed} XP needed for next stage`
-                    : 'Max stage reached!'}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex-1 w-full sm:max-w-xs">
-              <div className="flex justify-between text-[9px] text-text-muted mb-1 font-semibold">
-                <span>XP Progress</span>
-                <span>{data.plant_progress.xp} / {data.plant_progress.next_stage_xp} XP</span>
-              </div>
-              <div className="h-2 bg-cream-dark rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-sage rounded-full shimmer transition-all duration-700"
-                  style={{
-                    width: `${Math.round(
-                      (data.plant_progress.xp / data.plant_progress.next_stage_xp) * 100
-                    )}%`,
-                  }}
-                />
-              </div>
-            </div>
+      {/* ── 4. Continue Card ── */}
+      {resumeMaterial ? (
+        <div
+          style={{
+            background: '#FFFFFF',
+            border: '1.5px solid #4A7558',
+            borderRadius: '10px',
+            padding: '12px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '14px',
+          }}
+        >
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              background: '#EAF2EC',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <FileText size={16} style={{ color: '#4A7558' }} />
+          </div>
 
-            <div className="bg-[#EAF3DE]/50 border border-sage-light/60 text-moss rounded-lg px-3 py-1.5 text-center flex-shrink-0">
-              <div className="text-[9px] uppercase font-bold tracking-wider text-sage-dark">Streak</div>
-              <div className="text-xs font-semibold text-text-base">{data.study_streak} Days 🔥</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ss-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {resumeMaterial.name}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--ss-muted)', marginTop: '2px' }}>
+              {resumeMaterial.questions} questions · {resumeMaterial.week}
+            </div>
+            <div style={{ fontSize: '11px', color: '#4A7558', fontWeight: 500, marginTop: '2px' }}>
+              Last score: {resumeMaterial.lastScore}
             </div>
           </div>
 
-          {/* Stats Row */}
-          <StatsGrid stats={data} />
-
-          {/* Upload CTA */}
-          <UploadCard />
-
-          {/* Recent Materials */}
-          <RecentMaterials materials={data.recent_materials} />
-
-          {/* Weak Topics */}
-          <WeakTopics topics={data.weak_topics} />
-        </>
-      )}
-
-      {/* Weak Topics Tab */}
-      {activeTab === 'Weak topics' && (
-        <div className="bg-paper border border-card rounded-xl p-5">
-          <WeakTopics topics={data.weak_topics} />
-          <p className="text-xs text-text-muted mt-4">
-            Practice diagnostics by taking quizzes in Quiz Mode to identify more weak topics.
-          </p>
+          <button
+            onClick={() => navigate(`/quiz/${resumeMaterial.id}`)}
+            style={{
+              background: '#4A7558',
+              color: '#FFFFFF',
+              borderRadius: '8px',
+              padding: '7px 14px',
+              fontSize: '12px',
+              fontWeight: 500,
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'DM Sans, sans-serif',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Resume quiz →
+          </button>
         </div>
-      )}
+      ) : (
+        // Continue studied card replacement - zero state upload prompt
+        <div
+          onClick={() => navigate('/upload-pdf')}
+          style={{
+            background: '#FFFFFF',
+            border: '1.5px dashed #4A7558',
+            borderRadius: '10px',
+            padding: '12px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            cursor: 'pointer',
+            marginBottom: '14px',
+            transition: 'background 150ms',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--ss-inner)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#FFFFFF')}
+        >
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              background: 'var(--ss-amber-light)',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Upload size={16} style={{ color: 'var(--ss-amber)' }} />
+          </div>
 
-      {/* History Tab */}
-      {activeTab === 'History' && (
-        <div className="bg-paper border border-card rounded-xl p-5">
-          <p className="text-[13px] font-semibold text-text-base mb-3">Study History</p>
-          {data.quiz_history.length === 0 ? (
-            <p className="text-xs text-text-muted">
-              Your study session history will appear here once you start taking quizzes and studying materials.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {data.quiz_history.map((item) => (
-                <div
-                  key={item.attempt_id}
-                  className="p-3 bg-cream/10 border border-cream-darker/40 rounded-xl flex items-center justify-between text-xs hover:border-sage/40 transition-colors"
-                >
-                  <div>
-                    <p className="font-semibold text-text-base">{item.material_name}</p>
-                    <p className="text-[10px] text-text-muted mt-0.5">
-                      {item.total_questions} questions · {new Date(item.created_at).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                  <span className={`font-semibold text-sm ${item.score >= 70 ? 'text-sage-dark' : 'text-amber'}`}>
-                    {item.score}%
-                  </span>
-                </div>
-              ))}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ss-text)' }}>
+              Upload your first lecture to get started
             </div>
-          )}
+            <div style={{ fontSize: '11px', color: 'var(--ss-muted)', marginTop: '2px' }}>
+              Get studying materials and generate diagnostic quiz questions automatically.
+            </div>
+          </div>
+
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 500,
+              color: 'var(--ss-amber-text)',
+              background: 'var(--ss-amber-light)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            +10 XP
+          </div>
         </div>
       )}
+
+      {/* Stats Cards Row */}
+      <StatsGrid stats={data} />
+
+      {/* Grid for main content blocks */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        {/* Recent materials card */}
+        <RecentMaterials materials={data.recent_materials} />
+
+        {/* Weak topics card */}
+        <WeakTopics topics={data.weak_topics} />
+      </div>
     </div>
   );
 }
