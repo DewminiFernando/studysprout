@@ -4,13 +4,12 @@
 // Shows MaterialPicker when no :id param is present.
 
 import { useState, useEffect } from 'react';
-import { Pencil, ArrowRight, HelpCircle, AlertCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Pencil, ArrowRight, HelpCircle, AlertCircle, ChevronLeft, ChevronRight, Loader2, PlayCircle, FileText, Upload } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import MaterialPicker from '../components/MaterialPicker';
-import { quizAPI } from '../services/api';
+import { quizAPI, materialAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 function QuizMode() {
@@ -25,6 +24,26 @@ function QuizMode() {
   const [loading,              setLoading]              = useState(true);
   const [submitting,           setSubmitting]           = useState(false);
   const [error,                setError]                = useState('');
+
+  // States for empty state view
+  const [materials, setMaterials] = useState([]);
+  const [materialsLoading, setMaterialsLoading] = useState(false);
+
+  useEffect(() => {
+    if (materialId) return;
+    const fetchMaterials = async () => {
+      try {
+        setMaterialsLoading(true);
+        const response = await materialAPI.getMaterials();
+        setMaterials(response.data || []);
+      } catch (err) {
+        console.error('Failed to load materials for quiz empty state:', err);
+      } finally {
+        setMaterialsLoading(false);
+      }
+    };
+    fetchMaterials();
+  }, [materialId]);
 
   useEffect(() => {
     if (!materialId) { setLoading(false); return; }
@@ -86,18 +105,133 @@ function QuizMode() {
     }
   };
 
-  // ── No materialId → material picker ──
+  // ── No materialId → Redesigned Empty State ──
   if (!materialId) {
     return (
-      <MaterialPicker
-        title="Choose a Material for Quiz"
-        subtitle="Select a PDF to practice questions and test your understanding."
-        actionLabel="Practice Quiz"
-        targetBasePath="/quiz"
-        icon={Pencil}
-      />
+      <div className="max-w-2xl mx-auto">
+        <PageHeader
+          title="Practice Quiz"
+          description="Write answers to practice questions. Our AI evaluates semantic similarity to provide immediate feedback on submission."
+          icon={Pencil}
+        />
+        <div style={{ maxWidth: '400px', margin: '0 auto', paddingTop: '20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <PlayCircle size={32} style={{ color: '#4A7558', opacity: 0.4, margin: '0 auto 10px' }} />
+            <h3 style={{ fontSize: '14px', fontWeight: 500, color: 'var(--ss-text)' }}>
+              Start a study quiz
+            </h3>
+            <p style={{ fontSize: '12px', color: 'var(--ss-muted)', lineHeight: 1.5, marginTop: '4px', marginBottom: '14px' }}>
+              Select one of your uploaded materials below to begin a diagnostic practice quiz.
+            </p>
+          </div>
+
+          {materialsLoading ? (
+            <div style={{ textAlign: 'center', padding: '12px', fontSize: '12px', color: 'var(--ss-muted)' }}>
+              Loading materials...
+            </div>
+          ) : materials.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '12px', fontSize: '12px', color: 'var(--ss-muted)', fontStyle: 'italic' }}>
+              No study materials yet. Upload a PDF first to start studying.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+              {materials.map((material) => (
+                <div
+                  key={material.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 12px',
+                    background: '#FFFFFF',
+                    border: '0.5px solid #D6E4D8',
+                    borderRadius: '10px',
+                  }}
+                >
+                  {/* Icon Box */}
+                  <div
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      background: '#EAF2EC',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <FileText size={14} style={{ color: '#4A7558' }} />
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        color: 'var(--ss-text)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {material.title}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--ss-muted)', marginTop: '1px' }}>
+                      Uploaded {new Date(material.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <button
+                    onClick={() => navigate(`/quiz/${material.id}`)}
+                    style={{
+                      background: '#4A7558',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '5px 12px',
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      fontFamily: 'DM Sans, sans-serif',
+                    }}
+                  >
+                    Start quiz
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Bottom CTA */}
+          <div style={{ textAlign: 'center', borderTop: '0.5px solid #D6E4D8', paddingTop: '14px', marginTop: '14px' }}>
+            <button
+              onClick={() => navigate('/upload-pdf')}
+              style={{
+                background: '#FFFFFF',
+                border: '0.5px solid #4A7558',
+                color: '#4A7558',
+                borderRadius: '8px',
+                padding: '8px 20px',
+                fontSize: '12px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                fontFamily: 'DM Sans, sans-serif',
+              }}
+            >
+              Upload new lecture
+            </button>
+            <div style={{ fontSize: '11px', color: 'var(--ss-muted)', marginTop: '4px' }}>
+              + 10 XP
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
+
 
   if (loading) {
     return (
