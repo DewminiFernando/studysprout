@@ -11,7 +11,7 @@ function PageHeader({ title, description, icon: Icon }) {
             <Icon size={18} className="text-sage" />
           </div>
         )}
-        <h1 className="font-caveat text-2xl font-bold text-text-base leading-tight">
+        <h1 className="font-body text-[22px] font-semibold text-ss-text leading-tight">
           {title}
         </h1>
       </div>
