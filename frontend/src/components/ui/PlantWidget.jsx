@@ -1,6 +1,6 @@
 // ─── PlantWidget component ───
-// Shows the user's plant growth progress in the sidebar.
-// Label uses Caveat; XP numbers use DM Mono.
+// Bottom-of-sidebar plant progress widget.
+// Dark sidebar style: rgba(0,0,0,0.2) bg, amber progress bar fill.
 
 import { useAuth } from '../../context/AuthContext';
 
@@ -9,14 +9,35 @@ function PlantWidget() {
 
   if (!plantProgress) {
     return (
-      <div className="bg-paper rounded-2xl p-3 border border-[#D8E8D8] flex items-center justify-center h-16">
-        <div className="w-5 h-5 border-2 border-sage border-t-transparent rounded-full animate-spin"></div>
+      <div
+        style={{
+          background: 'rgba(0,0,0,0.2)',
+          borderRadius: '10px',
+          padding: '10px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '58px',
+        }}
+      >
+        <div
+          style={{
+            width: '16px',
+            height: '16px',
+            border: '2px solid rgba(255,255,255,0.4)',
+            borderTopColor: 'transparent',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }}
+        />
       </div>
     );
   }
 
   const { stage, level, xp, next_stage_xp } = plantProgress;
-  const progressPercent = next_stage_xp > 0 ? Math.round((xp / next_stage_xp) * 100) : 100;
+  const progressPercent = next_stage_xp > 0
+    ? Math.min((xp / next_stage_xp) * 100, 100)
+    : 100;
 
   const stageEmojis = {
     'Seed':          '🌱',
@@ -28,29 +49,60 @@ function PlantWidget() {
   const plantEmoji = stageEmojis[stage] || '🌱';
 
   return (
-    <div className="bg-paper rounded-2xl p-3 border border-[#D8E8D8]">
-      {/* Plant emoji */}
-      <div className="text-lg mb-1">{plantEmoji}</div>
-
-      {/* Plant label — Caveat for the decorative name */}
-      <div className="font-caveat text-[13px] font-semibold text-sage capitalize">
-        {stage} · Lvl <span className="font-dm-mono">{level}</span>
-      </div>
-
-      {/* XP info — DM Mono for numbers */}
-      <div className="text-[10px] text-text-muted mt-1 mb-1.5">
-        <span className="font-dm-mono">{xp}</span>
-        {' / '}
-        <span className="font-dm-mono">{next_stage_xp}</span>
-        {' XP to bloom'}
+    <div
+      style={{
+        background: 'rgba(0,0,0,0.2)',
+        borderRadius: '10px',
+        padding: '10px 12px',
+      }}
+    >
+      {/* Plant emoji + label row */}
+      <div className="flex items-center gap-2 mb-1.5">
+        <span style={{ fontSize: '18px', lineHeight: 1 }}>{plantEmoji}</span>
+        <div>
+          <div
+            style={{
+              fontSize: '11.5px',
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.9)',
+              lineHeight: 1.2,
+            }}
+          >
+            {stage} · Lv {level}
+          </div>
+        </div>
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 bg-cream-dark rounded-full overflow-hidden">
+      <div
+        style={{
+          height: '5px',
+          background: 'rgba(255,255,255,0.15)',
+          borderRadius: '4px',
+          overflow: 'hidden',
+          marginBottom: '4px',
+        }}
+      >
         <div
-          className="h-full bg-sage rounded-full shimmer transition-all duration-700"
-          style={{ width: `${progressPercent}%` }}
+          className="shimmer"
+          style={{
+            height: '100%',
+            width: `${progressPercent}%`,
+            background: '#C8934A',
+            borderRadius: '4px',
+            transition: 'width 0.7s ease',
+          }}
         />
+      </div>
+
+      {/* XP caption */}
+      <div
+        style={{
+          fontSize: '10px',
+          color: 'rgba(255,255,255,0.5)',
+        }}
+      >
+        {xp} / {next_stage_xp} XP to bloom
       </div>
     </div>
   );
