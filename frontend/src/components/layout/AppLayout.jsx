@@ -1,25 +1,30 @@
 // ─── AppLayout component ───
-// Main layout wrapper: sidebar on left, content area on right.
+// CSS Grid layout: 168px sidebar | 1fr scrollable main.
+// No top navbar — topbar row lives inside each page.
 
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import Topbar from './Topbar';
 
 function AppLayout() {
   return (
-    <div className="flex min-h-screen bg-cream">
-      {/* Sidebar */}
+    <div
+      className="min-h-screen"
+      style={{ display: 'grid', gridTemplateColumns: '168px 1fr' }}
+    >
+      {/* Sidebar — fixed-height sticky column */}
       <Sidebar />
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
-        <Topbar />
-
-        {/* Page content — rendered by React Router <Outlet> */}
-        <main className="flex-1 p-5 px-6 overflow-y-auto">
-          <Outlet />
-        </main>
-      </div>
+      {/* Main scrollable content area */}
+      <main
+        className="overflow-y-auto"
+        style={{
+          background: 'var(--ss-bg)',
+          padding: '16px 18px',
+          minHeight: '100vh',
+        }}
+      >
+        <Outlet />
+      </main>
     </div>
   );
 }
