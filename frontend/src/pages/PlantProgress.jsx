@@ -1,10 +1,11 @@
 // ─── PlantProgress page ───
 // Visual representation of the student's learning growth: plant upgrades & XP trackers.
+// Redesigned to match design system ss-* tokens and custom styled widgets.
 
 import { useState, useEffect } from 'react';
-import { Leaf, Award, AlertCircle } from 'lucide-react';
-import PageHeader from '../components/ui/PageHeader';
+import { Leaf, FileText, Sparkles, Pencil, Award, HelpCircle } from 'lucide-react';
 import { plantAPI } from '../services/api';
+import Topbar from '../components/layout/Topbar';
 
 function PlantProgress() {
   const [data, setData] = useState(null);
@@ -32,18 +33,20 @@ function PlantProgress() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <div className="w-10 h-10 border-4 border-sage border-t-transparent rounded-full animate-spin mb-3"></div>
-        <p className="text-sm text-text-muted">Loading your digital plant...</p>
+        <div className="w-10 h-10 border-4 border-ss-green border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p className="text-sm text-ss-muted">Loading your digital plant...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-danger-light/20 border border-danger/20 text-danger text-sm rounded-xl p-4 flex items-center gap-3 mt-4">
-        <AlertCircle size={18} className="flex-shrink-0" />
-        <span>{error}</span>
-        <button onClick={fetchProgress} className="text-xs font-semibold underline ml-auto bg-transparent border-none cursor-pointer">
+      <div className="bg-ss-danger-bg border border-ss-danger text-ss-danger-text text-sm rounded-xl p-4 flex items-center gap-3 mt-4">
+        <span className="flex-1">{error}</span>
+        <button
+          onClick={fetchProgress}
+          className="text-xs font-semibold underline bg-transparent border-none cursor-pointer"
+        >
           Retry
         </button>
       </div>
@@ -51,7 +54,9 @@ function PlantProgress() {
   }
 
   const { xp, stage, level, study_streak, next_stage_xp, xp_needed, last_activity_at } = data;
-  const progressPercent = next_stage_xp > 0 ? Math.round((xp / next_stage_xp) * 100) : 100;
+  const progressPercent = next_stage_xp > 0
+    ? Math.min((xp / next_stage_xp) * 100, 100)
+    : 100;
 
   // Stages definition
   const STAGES = [
@@ -64,16 +69,15 @@ function PlantProgress() {
 
   // Friendly messages based on stage
   const messages = {
-    'Seed': 'Your learning journey is just beginning. Plant the seeds of knowledge by uploading lecture notes and slides!',
-    'Sprout': 'A tiny sprout has emerged! Keep studying, generating questions, and completing quizzes to help it grow.',
-    'Small Plant': 'Look at it grow! Your plant is getting bigger as you practice more quizzes and review weak topics.',
-    'Growing Plant': 'Almost there! Your plant is growing tall and strong. Just a few more study sessions to bloom!',
+    'Seed': 'Your learning journey is just beginning. Upload notes and slides to sprout!',
+    'Sprout': 'A tiny sprout has emerged! Keep studying to help it grow.',
+    'Small Plant': 'Look at it grow! Your plant is getting bigger as you practice quizzes.',
+    'Growing Plant': 'Almost there! Your plant is growing tall and strong. Just a few more quizzes to bloom!',
     'Flower': 'Incredible! Your plant has fully bloomed into a beautiful flower. You have mastered your study goals! 🌸',
   };
 
   const currentMessage = messages[stage] || messages['Seed'];
 
-  // Map stage emojis
   const stageEmojis = {
     'Seed': '🌱',
     'Sprout': '🌿',
@@ -83,143 +87,254 @@ function PlantProgress() {
   };
   const plantEmoji = stageEmojis[stage] || '🌱';
 
+  // Growth guides
+  const GUIDES = [
+    { label: 'Upload lecture PDF', xp: '+10 XP', icon: FileText },
+    { label: 'Generate AI Questions', xp: '+15 XP', icon: Sparkles },
+    { label: 'Complete a study quiz', xp: '+20 XP', icon: Pencil },
+    { label: 'Achieve quiz score ≥ 70%', xp: '+25 XP', icon: Award },
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto">
-      <PageHeader
-        title="My Digital Plant"
-        description="Watch your learning seed sprout, bloom, and mature as you complete daily goals and master lecture concepts."
-        icon={Leaf}
-      />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Topbar row */}
+      <Topbar />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        {/* Left: Plant visual & main info */}
-        <div className="bg-paper border border-card rounded-xl p-5 text-center flex flex-col justify-between">
-          <div className="py-6">
-            <div className="text-6xl animate-bounce duration-1000 mb-4">{plantEmoji}</div>
-            <h2 className="text-base font-semibold text-text-base capitalize">
-              {stage} · Level {level}
-            </h2>
-            <p className="text-[11px] text-text-muted mt-2 px-2 font-medium">
-              {currentMessage}
-            </p>
-          </div>
+      {/* ── 1. Hero Card ── */}
+      <div
+        style={{
+          background: '#4A7558',
+          borderRadius: '10px',
+          padding: '20px',
+          textAlign: 'center',
+          marginBottom: '14px',
+          color: '#FFFFFF',
+        }}
+      >
+        {/* Plant emoji */}
+        <div style={{ fontSize: '52px', marginBottom: '8px', lineHeight: 1 }}>
+          {plantEmoji}
+        </div>
 
-          <div className="border-t border-cream-dark pt-4 text-left">
-            <div className="flex justify-between text-[11px] text-text-muted mb-1.5 font-semibold">
-              <span>XP Level Progress</span>
-              <span>{xp} / {next_stage_xp} XP</span>
-            </div>
-            <div className="h-2 bg-cream-dark rounded-full overflow-hidden">
+        {/* Name */}
+        <div
+          style={{
+            fontFamily: 'Caveat, cursive',
+            fontSize: '22px',
+            fontWeight: 700,
+            marginBottom: '4px',
+            color: '#FFFFFF',
+          }}
+        >
+          {stage} · Level {level}
+        </div>
+
+        {/* Subtitle */}
+        <div
+          style={{
+            fontSize: '12px',
+            color: 'rgba(255,255,255,0.65)',
+            marginBottom: '14px',
+            maxWidth: '320px',
+            margin: '0 auto 14px',
+          }}
+        >
+          {currentMessage}
+        </div>
+
+        {/* Progress bar */}
+        <div
+          style={{
+            height: '10px',
+            background: 'rgba(255,255,255,0.2)',
+            borderRadius: '6px',
+            maxWidth: '240px',
+            margin: '0 auto 6px',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            className="shimmer"
+            style={{
+              height: '100%',
+              width: `${progressPercent}%`,
+              background: '#C8934A',
+              borderRadius: '6px',
+              transition: 'width 0.6s ease',
+            }}
+          />
+        </div>
+
+        {/* XP label */}
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', marginTop: '6px' }}>
+          {xp} / {next_stage_xp} XP
+        </div>
+      </div>
+
+      {/* ── 2. Growth Stages 5-col Grid ── */}
+      <div style={{ marginBottom: '14px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ss-text)', marginBottom: '10px' }}>
+          Growth Stages
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: '8px',
+          }}
+        >
+          {STAGES.map((s) => {
+            const isCurrent = s.name === stage;
+            const isLocked = xp < s.minXp;
+
+            return (
               <div
-                className="h-full bg-sage rounded-full shimmer transition-all duration-700"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
+                key={s.name}
+                style={{
+                  background: '#FFFFFF',
+                  border: isCurrent ? '1.5px solid #4A7558' : '0.5px solid #D6E4D8',
+                  borderRadius: '10px',
+                  padding: '10px 8px',
+                  textAlign: 'center',
+                  opacity: isLocked ? 0.45 : 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '90px',
+                  position: 'relative',
+                }}
+              >
+                <div style={{ fontSize: '22px', marginBottom: '2px', lineHeight: 1 }}>{s.emoji}</div>
+                <div style={{ fontSize: '11px', fontWeight: 500, color: 'var(--ss-text)', lineHeight: 1.2 }}>
+                  {s.name}
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--ss-muted)', marginTop: '2px' }}>
+                  {s.range}
+                </div>
+
+                {isCurrent && (
+                  <span
+                    style={{
+                      background: '#EAF2EC',
+                      color: '#3B6D11',
+                      borderRadius: '4px',
+                      padding: '1px 6px',
+                      fontSize: '9px',
+                      fontWeight: 500,
+                      marginTop: '6px',
+                    }}
+                  >
+                    Current
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── 3. XP Guide 2-col Grid ── */}
+      <div style={{ marginBottom: '14px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--ss-text)', marginBottom: '10px' }}>
+          How to earn XP
         </div>
 
-        {/* Middle: Plant Growth Stages list */}
-        <div className="bg-paper border border-card rounded-xl p-5 flex flex-col">
-          <h3 className="text-xs font-bold text-text-base mb-3 flex items-center gap-1.5 uppercase tracking-wide">
-            <Award size={14} className="text-sage" /> Growth Stages
-          </h3>
-          <p className="text-[10px] text-text-muted mb-4 font-medium">
-            Gain XP through study actions to watch your plant evolve.
-          </p>
-
-          <div className="space-y-2 flex-1">
-            {STAGES.map((s) => {
-              const isCurrent = s.name === stage;
-              const isPassed = xp >= s.minXp;
-              return (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '10px',
+          }}
+        >
+          {GUIDES.map((g, idx) => {
+            const Icon = g.icon;
+            return (
+              <div
+                key={idx}
+                style={{
+                  background: '#FFFFFF',
+                  border: '0.5px solid #D6E4D8',
+                  borderRadius: '10px',
+                  padding: '10px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  cursor: 'pointer',
+                  transition: 'border-color 150ms',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#4A7558')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#D6E4D8')}
+              >
+                {/* Icon box */}
                 <div
-                  key={s.name}
-                  className={`p-2.5 rounded-lg border text-xs flex items-center justify-between transition-colors ${
-                    isCurrent
-                      ? 'bg-[#EAF3DE]/40 border-sage-light text-moss font-semibold shadow-sm'
-                      : isPassed
-                      ? 'bg-cream/10 border-cream-darker/30 text-text-muted opacity-80'
-                      : 'bg-cream/5 border-transparent text-text-light opacity-50'
-                  }`}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    background: '#EAF2EC',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">{s.emoji}</span>
-                    <div>
-                      <div className="text-[11px]">{s.name}</div>
-                      <div className="text-[9px] text-text-light font-medium">{s.range}</div>
-                    </div>
-                  </div>
-                  {isCurrent && (
-                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-sage text-white text-center font-bold">
-                      Current Stage
-                    </span>
-                  )}
+                  <Icon size={16} style={{ color: '#4A7558' }} />
                 </div>
-              );
-            })}
+
+                {/* Label */}
+                <div style={{ fontSize: '12.5px', fontWeight: 500, color: 'var(--ss-text)', flex: 1 }}>
+                  {g.label}
+                </div>
+
+                {/* XP Pill */}
+                <div
+                  style={{
+                    background: '#EAF2EC',
+                    color: '#3B6D11',
+                    borderRadius: '6px',
+                    padding: '2px 8px',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {g.xp}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── 4. Streak Footer Card ── */}
+      <div
+        style={{
+          background: '#FFFFFF',
+          border: '0.5px solid #D6E4D8',
+          borderRadius: '10px',
+          padding: '10px 12px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        {/* Left info */}
+        <div>
+          <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--ss-text)' }}>
+            Active streak: {study_streak} day{study_streak === 1 ? '' : 's'} 🔥
           </div>
+          {last_activity_at && (
+            <div style={{ fontSize: '11px', color: 'var(--ss-muted)', marginTop: '2px' }}>
+              Last activity: {new Date(last_activity_at).toLocaleString()}
+            </div>
+          )}
         </div>
 
-        {/* Right: Growth Guide & XP Rules */}
-        <div className="bg-paper border border-card rounded-xl p-5 flex flex-col justify-between">
-          <div>
-            <h3 className="text-xs font-bold text-text-base mb-3 flex items-center gap-1.5 uppercase tracking-wide">
-              <Award size={14} className="text-sage" /> Growth Guide
-            </h3>
-            <p className="text-[10px] text-text-muted mb-4 font-medium">
-              Perform these study activities to earn XP and level up your digital plant:
-            </p>
-
-            <div className="space-y-2.5 mt-2">
-              <div className="flex items-center justify-between text-xs p-2 bg-cream/20 rounded-lg border border-cream-darker/30">
-                <span className="flex items-center gap-2">
-                  <span className="text-sm">📤</span>
-                  <span className="font-medium text-text-base">Upload PDF</span>
-                </span>
-                <span className="text-[10px] font-bold text-sage-dark bg-[#EAF3DE] px-2 py-0.5 rounded">
-                  +10 XP
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs p-2 bg-cream/20 rounded-lg border border-cream-darker/30">
-                <span className="flex items-center gap-2">
-                  <span className="text-sm">✨</span>
-                  <span className="font-medium text-text-base">Generate Questions</span>
-                </span>
-                <span className="text-[10px] font-bold text-sage-dark bg-[#EAF3DE] px-2 py-0.5 rounded">
-                  +15 XP
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs p-2 bg-cream/20 rounded-lg border border-cream-darker/30">
-                <span className="flex items-center gap-2">
-                  <span className="text-sm">📝</span>
-                  <span className="font-medium text-text-base">Complete a Quiz</span>
-                </span>
-                <span className="text-[10px] font-bold text-sage-dark bg-[#EAF3DE] px-2 py-0.5 rounded">
-                  +20 XP
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-xs p-2 bg-cream/20 rounded-lg border border-cream-darker/30">
-                <span className="flex items-center gap-2">
-                  <span className="text-sm">🏆</span>
-                  <span className="font-medium text-text-base">Quiz Score ≥ 70%</span>
-                </span>
-                <span className="text-[10px] font-bold text-sage-dark bg-[#EAF3DE] px-2 py-0.5 rounded">
-                  +25 XP
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-cream-dark pt-3 mt-4">
-            <div className="text-[10px] text-text-light flex flex-col gap-1 text-center font-medium">
-              <div><strong>Active Study Streak:</strong> {study_streak} Days 🔥</div>
-              {last_activity_at && (
-                <div className="text-[9px]">
-                  <strong>Last Activity:</strong> {new Date(last_activity_at).toLocaleString()}
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Right info */}
+        <div style={{ fontSize: '11px', color: 'var(--ss-muted)', textAlign: 'right' }}>
+          Keep studying daily to protect your streak!
         </div>
       </div>
     </div>
