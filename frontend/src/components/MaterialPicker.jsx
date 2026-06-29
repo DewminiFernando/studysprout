@@ -56,8 +56,7 @@ function MaterialPicker({ title, subtitle, actionLabel, targetBasePath, icon: Ic
           <div className="w-10 h-10 bg-sage-pale rounded-xl flex items-center justify-center flex-shrink-0">
             <IconComponent size={19} className="text-sage" />
           </div>
-          {/* Caveat for section title */}
-          <h1 className="font-caveat text-2xl font-bold text-text-base">{title}</h1>
+          <h1 className="font-body text-[22px] font-semibold text-ss-text">{title}</h1>
         </div>
         <p className="text-[13px] text-text-muted mt-1 ml-[52px] leading-relaxed">{subtitle}</p>
       </div>
