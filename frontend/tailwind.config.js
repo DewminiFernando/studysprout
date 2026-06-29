@@ -7,56 +7,95 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary brand — sage palette
-        // DEFAULT is now the rich dark sage (#4A7558) for buttons/icons.
-        // light is the soft mid sage (#7A9E87) for borders/hover states.
-        // pale is the faint sage tint (#EEF7F0) for backgrounds/chips.
-        // dark is the deepest sage (#3B5E48) for hover on primary buttons.
+        // ── StudySprout design tokens (ss.*) ──
+        ss: {
+          // Surfaces / backgrounds (60%)
+          bg:             '#F0EDE8',
+          surface:        '#FFFFFF',
+          'surface-green':'#EAF2EC',
+          inner:          '#F7F5F1',
+
+          // Sage green — primary brand (30%)
+          green:          '#4A7558',
+          'mid-green':    '#7A9E87',
+          'light-green':  '#B8D4C0',
+          'pale-green':   '#EAF2EC',
+          sidebar:        '#4A7558',
+
+          // Amber — accent / XP / CTA (10%)
+          amber:          '#C8934A',
+          'amber-light':  '#FFF3E0',
+          'amber-border': '#F4A535',
+          'amber-text':   '#7A4F00',
+
+          // Semantic
+          danger:         '#E24B4A',
+          'danger-bg':    '#FCEBEB',
+          'danger-text':  '#A32D2D',
+          warning:        '#EF9F27',
+          'warning-bg':   '#FFF8E1',
+          'warning-text': '#5A3A00',
+          success:        '#4A7558',
+          'success-bg':   '#EAF2EC',
+          'success-text': '#3B6D11',
+
+          // Text
+          text:           '#2C3A2E',
+          muted:          '#6B7E6E',
+          subtle:         '#9CA89D',
+
+          // Borders
+          border:         '#D6E4D8',
+          'border-inner': '#EEF2EF',
+        },
+
+        // ── Legacy tokens — kept for backward compat in files not yet migrated ──
         sage: {
           DEFAULT: '#4A7558',
           light:   '#7A9E87',
-          pale:    '#EEF7F0',
+          pale:    '#EAF2EC',
           dark:    '#3B5E48',
         },
         cream: {
-          DEFAULT: '#F5F2EB',
-          dark:    '#EDE9DF',
-          darker:  '#D8D3C5',
+          DEFAULT: '#F0EDE8',
+          dark:    '#E5E1DB',
+          darker:  '#D0CCC5',
         },
-        // Accent palette
-        'accent-pink':     '#F4C0D1',
-        'accent-lavender': '#C8B4E8',
-        'accent-amber':    '#F5C28A',
-        'accent-peach':    '#F5C4B3',
-        // Text
-        'text-base':  '#2C3A2E',
-        'text-muted': '#7A9E87',
-        'text-light': '#9AB09E',
-        moss: '#5C7A4E',
         amber: {
           DEFAULT: '#C8934A',
-          light:   '#F5E6D0',
+          light:   '#FFF3E0',
         },
         danger: {
-          DEFAULT: '#B05A5A',
-          light:   '#F5E8E8',
+          DEFAULT: '#E24B4A',
+          light:   '#FCEBEB',
         },
-        paper: '#FFFEFB',
+        paper:        '#FFFFFF',
+        moss:         '#3B6D11',
+        'text-base':  '#2C3A2E',
+        'text-muted': '#6B7E6E',
+        'text-light': '#9CA89D',
       },
+
       fontFamily: {
-        // Nunito = primary body/UI font
-        sans:     ['Nunito', 'sans-serif'],
-        // Caveat = decorative titles only (logo, page titles, section heads, greeting)
-        caveat:   ['Caveat', 'cursive'],
-        // DM Mono = numbers only (XP, scores, percentages, counts)
+        // Display / logo — Caveat
+        display: ['Caveat', 'cursive'],
+        caveat:  ['Caveat', 'cursive'],
+        // Body — DM Sans
+        body:    ['DM Sans', 'sans-serif'],
+        sans:    ['DM Sans', 'sans-serif'],
+        // Legacy mono kept for any remaining usages
         'dm-mono': ['DM Mono', 'monospace'],
       },
-      borderColor: {
-        card:    'rgba(74, 117, 88, 0.15)',
-        DEFAULT: '#D8E8D8',
-      },
+
       borderRadius: {
-        card: '16px',
+        card:  '10px',
+        pill:  '20px',
+        btn:   '8px',
+        tag:   '6px',
+      },
+
+      boxShadow: {
+        focus: '0 0 0 2px #B8D4C0',
       },
     },
   },
