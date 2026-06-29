@@ -60,8 +60,7 @@ function MyMaterials() {
       {/* ── Page header ── */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          {/* Caveat for page title */}
-          <h1 className="font-caveat text-3xl font-bold text-text-base">My Study Materials</h1>
+          <h1 className="font-body text-[22px] font-semibold text-ss-text">My Study Materials</h1>
           <p className="text-sm text-text-muted mt-1">
             Access your uploaded PDFs, generate study content, and continue practicing.
           </p>
