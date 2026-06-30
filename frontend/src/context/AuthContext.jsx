@@ -23,7 +23,9 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Fetch the current user details from /auth/me
+  // Fetch the current user details from /auth/me.
+  // Returns true on success, false on failure.
+  // On failure the token is cleared and isAuthenticated is set to false.
   const fetchCurrentUser = async () => {
     try {
       const response = await authAPI.getCurrentUser();
@@ -48,12 +50,14 @@ export function AuthProvider({ children }) {
       
       // Load real plant progress in parallel
       fetchPlantProgress();
+      return true;
     } catch (err) {
-      // If token is invalid or expired, clear it
+      // If token is invalid or expired, clear it and mark as unauthenticated
       localStorage.removeItem('token');
       setUser(null);
       setPlantProgress(null);
       setIsAuthenticated(false);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -78,8 +82,13 @@ export function AuthProvider({ children }) {
     try {
       const response = await authAPI.login(email, password);
       const { access_token } = response.data;
+      // Save the token so the Axios interceptor can attach it to /auth/me
       localStorage.setItem('token', access_token);
-      await fetchCurrentUser();
+      const ok = await fetchCurrentUser();
+      if (!ok) {
+        // fetchCurrentUser already cleared the token; surface the failure
+        throw new Error('Login succeeded but failed to load user profile. Please try again.');
+      }
     } catch (err) {
       setLoading(false);
       throw err;
@@ -95,7 +104,10 @@ export function AuthProvider({ children }) {
       const response = await authAPI.login(email, password);
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
-      await fetchCurrentUser();
+      const ok = await fetchCurrentUser();
+      if (!ok) {
+        throw new Error('Registration succeeded but failed to load user profile. Please try again.');
+      }
     } catch (err) {
       setLoading(false);
       throw err;
